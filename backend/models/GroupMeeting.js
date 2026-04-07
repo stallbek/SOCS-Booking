@@ -1,5 +1,5 @@
 // Type 2 - Group meeting with Calendar Method (owner defines slots, users vote)
-// Author: [MEMBER_NAME]
+
 const mongoose = require('mongoose');
 
 const timeOptionSchema = new mongoose.Schema({

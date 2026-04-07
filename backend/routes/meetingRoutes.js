@@ -1,5 +1,5 @@
 // Meeting routes: Type 1 (request meetings) and Type 2 (group meetings with calendar method)
-// Author:
+
 
 const express = require('express');
 const router = express.Router();
