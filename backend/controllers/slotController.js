@@ -3,10 +3,12 @@ const Slot = require('../models/Slot');
 // Create slot
 exports.createSlot = async (req, res) => {
   try {
-    const { startTime, endTime } = req.body;
+    const { title, date, startTime, endTime } = req.body;
 
     const slot = await Slot.create({
-      owner: req.user.id, // later from auth
+      owner: req.user.id,
+      title,
+      date,
       startTime,
       endTime
     });
