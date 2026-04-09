@@ -1,3 +1,5 @@
+const { requireAuth, requireOwner } = require('../middleware/authMiddleware');
+
 const express = require('express');
 const router = express.Router();
 
@@ -8,10 +10,11 @@ const {
   deleteSlot
 } = require('../controllers/slotController');
 
-// TEMP: no auth yet
-router.post('/', createSlot);
-router.get('/mine', getMySlots);
-router.put('/:id/activate', activateSlot);
-router.delete('/:id', deleteSlot);
+
+
+router.post('/', requireOwner, createSlot);
+router.get('/mine', requireOwner, getMySlots);
+router.put('/:id/activate', requireOwner, activateSlot);
+router.delete('/:id', requireOwner, deleteSlot);
 
 module.exports = router;
