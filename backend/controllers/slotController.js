@@ -46,6 +46,23 @@ exports.getMySlots = async (req, res) => {
   }
 };
 
+// Get a specific slot by ID (for authenticated users)
+exports.getSlotById = async (req, res) => {
+  try {
+    const slot = await Slot.findById(req.params.id)
+      .populate('owner', 'name email')
+      .populate('bookedBy', 'name email');
+
+    if (!slot) {
+      return res.status(404).json({ error: 'Slot not found.' });
+    }
+
+    res.json(slot);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Get all slots with booked user details (detailed view for owner)
 exports.getMySlotDetails = async (req, res) => {
   try {
@@ -333,6 +350,33 @@ exports.getOwnerPublicSlots = async (req, res) => {
     res.json({
       owner: { id: owner._id, name: owner.name, email: owner.email },
       slots
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get a single slot by invite code (public access - no auth required)
+exports.getSlotByInviteCode = async (req, res) => {
+  try {
+    const { inviteCode } = req.params;
+
+    const slot = await Slot.findOne({ inviteCode })
+      .populate('owner', 'name email')
+      .populate('bookedBy', 'name email');
+
+    if (!slot) {
+      return res.status(404).json({ error: 'Slot not found. The invite link may be invalid or expired.' });
+    }
+
+    if (slot.status !== 'active') {
+      return res.status(400).json({ error: 'This slot is no longer available.' });
+    }
+
+    res.json({
+      slot,
+      owner: { id: slot.owner._id, name: slot.owner.name, email: slot.owner.email },
+      isAvailable: !slot.bookedBy
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

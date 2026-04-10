@@ -6,6 +6,7 @@ const router = express.Router();
 const {
   createSlot,
   getMySlots,
+  getSlotById,
   activateSlot,
   deleteSlot,
   getMySlotDetails,
@@ -15,6 +16,7 @@ const {
   getMyBookings,
   getPublicOwners,
   getOwnerPublicSlots,
+  getSlotByInviteCode,
   createOfficeHours,
   getMyOfficeHours
 } = require('../controllers/slotController');
@@ -23,6 +25,7 @@ const {
 router.post('/', requireOwner, createSlot);
 router.get('/mine', requireOwner, getMySlots);
 router.get('/mine/details', requireOwner, getMySlotDetails);
+router.get('/:id', requireAuth, getSlotById);
 router.put('/:id/activate', requireOwner, activateSlot);
 router.delete('/:id', requireOwner, deleteSlot);
 router.post('/:id/invite-link', requireOwner, generateInviteLink);
@@ -39,5 +42,7 @@ router.get('/bookings/mine', requireAuth, getMyBookings);
 // Public endpoints - list of owners and their public slots
 router.get('/public/owners', requireAuth, getPublicOwners);
 router.get('/public/owner/:ownerId/slots', requireAuth, getOwnerPublicSlots);
+// Public endpoint - access slot by invite code (no auth required)
+router.get('/public/code/:inviteCode', getSlotByInviteCode);
 
 module.exports = router;

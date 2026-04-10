@@ -305,3 +305,5 @@ router.get('/my-groups', requireOwner, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch group meetings.' });
   }
 });
+
+module.exports = router;
