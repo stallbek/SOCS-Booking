@@ -8,7 +8,7 @@ const MeetingRequest = require('../models/MeetingRequest');
 const GroupMeeting = require('../models/GroupMeeting');
 const Slot = require('../models/Slot');
 const User = require('../models/User');
-const { requireAuth, requireOwner } = require('../middleware/auth');
+const { requireAuth, requireOwner } = require('../middleware/authMiddleware');
 
 // ═══════════════════════════════════════════
 //  TYPE 1 – Request a Meeting
