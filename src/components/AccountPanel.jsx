@@ -1,14 +1,65 @@
-import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useSession } from '../context/SessionContext';
 
-function AuthOverlay({ mode }) {
+function AccountPanel({ mode }) {
   const navigate = useNavigate();
-  const [showNotice, setShowNotice] = useState(false);
+  const location = useLocation();
+  const { login } = useSession();
   const isRegister = mode === 'register';
+  const [feedback, setFeedback] = useState('');
+  const [formValues, setFormValues] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+
+  const redirectTo = location.state?.redirectTo || '/app/dashboard';
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    setFormValues((currentValues) => ({
+      ...currentValues,
+      [name]: value,
+    }));
+  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    setShowNotice(true);
+
+    if (isRegister && !formValues.name.trim()) {
+      setFeedback('Enter your name before creating the account.');
+      return;
+    }
+
+    if (!formValues.email.trim()) {
+      setFeedback('Enter your McGill email address.');
+      return;
+    }
+
+    if (!formValues.password.trim()) {
+      setFeedback('Enter your password.');
+      return;
+    }
+
+    if (isRegister && formValues.password !== formValues.confirmPassword) {
+      setFeedback('Passwords do not match.');
+      return;
+    }
+
+    const result = login({
+      email: formValues.email,
+      name: formValues.name,
+    });
+
+    if (!result.success) {
+      setFeedback(result.message);
+      return;
+    }
+
+    navigate(redirectTo, { replace: true });
   };
 
   return (
@@ -34,7 +85,7 @@ function AuthOverlay({ mode }) {
 
           <Link aria-label="Close" className="auth-close" to="/">
             <span className="auth-close-mark" aria-hidden="true">
-              ×
+              X
             </span>
             <span>Close</span>
           </Link>
@@ -55,18 +106,18 @@ function AuthOverlay({ mode }) {
               <div className="auth-form-row">
                 <label className="form-field">
                   <span>Name</span>
-                  <input placeholder="Full name" type="text" />
+                  <input name="name" onChange={handleChange} placeholder="Full name" type="text" value={formValues.name} />
                 </label>
 
                 <label className="form-field">
                   <span>McGill email</span>
-                  <input placeholder="name@mcgill.ca" type="email" />
+                  <input name="email" onChange={handleChange} placeholder="name@mcgill.ca" type="email" value={formValues.email} />
                 </label>
               </div>
             ) : (
               <label className="form-field">
                 <span>McGill email</span>
-                <input placeholder="name@mcgill.ca" type="email" />
+                <input name="email" onChange={handleChange} placeholder="name@mcgill.ca" type="email" value={formValues.email} />
               </label>
             )}
 
@@ -74,18 +125,24 @@ function AuthOverlay({ mode }) {
               <div className="auth-form-row">
                 <label className="form-field">
                   <span>Password</span>
-                  <input placeholder="Password" type="password" />
+                  <input name="password" onChange={handleChange} placeholder="Password" type="password" value={formValues.password} />
                 </label>
 
                 <label className="form-field">
                   <span>Confirm password</span>
-                  <input placeholder="Repeat password" type="password" />
+                  <input
+                    name="confirmPassword"
+                    onChange={handleChange}
+                    placeholder="Repeat password"
+                    type="password"
+                    value={formValues.confirmPassword}
+                  />
                 </label>
               </div>
             ) : (
               <label className="form-field">
                 <span>Password</span>
-                <input placeholder="Password" type="password" />
+                <input name="password" onChange={handleChange} placeholder="Password" type="password" value={formValues.password} />
               </label>
             )}
 
@@ -98,11 +155,7 @@ function AuthOverlay({ mode }) {
               </div>
             )}
 
-            {showNotice && (
-              <div className="auth-notice">
-                Authentication is still being connected.
-              </div>
-            )}
+            {feedback ? <div className="auth-notice">{feedback}</div> : null}
 
             <button className="button button-primary auth-submit" type="submit">
               {isRegister ? 'Register' : 'Log in'}
@@ -136,7 +189,7 @@ function AuthOverlay({ mode }) {
 
         <div className="auth-switch">
           <span>{isRegister ? 'Already have an account?' : 'Need an account?'}</span>
-          <Link className="text-link" to={isRegister ? '/login' : '/register'}>
+          <Link className="text-link" state={location.state} to={isRegister ? '/login' : '/register'}>
             {isRegister ? 'Log in' : 'Register'}
           </Link>
         </div>
@@ -145,4 +198,4 @@ function AuthOverlay({ mode }) {
   );
 }
 
-export default AuthOverlay;
+export default AccountPanel;

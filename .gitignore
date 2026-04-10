@@ -3,3 +3,4 @@ dist/
 .env
 backend/node_modules/
 backend/.env
+src/data/
