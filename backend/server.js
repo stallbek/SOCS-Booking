@@ -16,6 +16,7 @@ console.log("After DB");
 //Import routes
 const slotRoutes = require('./routes/slotRoutes');
 const authRoutes = require('./routes/authRoutes');
+const meetingRoutes = require('./routes/meetingRoutes');
 
 //creates Express application
 const app = express();
@@ -44,6 +45,7 @@ app.use(session({
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/slots', slotRoutes);
+app.use('/api/meetings', meetingRoutes);
 
 app.get('/', (req, res) => {
     console.log("Root route hit");

@@ -19,16 +19,15 @@ const {
 const {
   requireAuth,
   requireOwner
-} = require('../middleware/auth');
+} = require('../middleware/authMiddleware');
 
 
 // TYPE 1
 router.post('/request', requireAuth, sendMeetingRequest); // User
-router.get('/requests', requireOwner, getMeetingRequests);//User
-router.patch('/request/:id/accept', requireOwner, acceptMeetingRequest); //Owner
+router.get('/requests', requireOwner, getMeetingRequests);// Owner
+router.patch('/request/:id/accept', requireOwner, acceptMeetingRequest); // Owner
 router.patch('/request/:id/decline', requireOwner, declineMeetingRequest); //Owner
-
-router.get('/my-requests', requireAuth, getMyMeetingRequests);
+router.get('/my-requests', requireAuth, getMyMeetingRequests); // User
 
 
 // TYPE 2

@@ -47,6 +47,13 @@ const slotSchema = new mongoose.Schema({
     type: String,
     enum: ['single', 'office-hours', 'group'],
     default: 'single'
+  },
+  // Unique invitation code for sharing slot links
+  inviteCode: {
+    type: String,
+    unique: true,
+    sparse: true,
+    default: null
   }
 }, { timestamps: true });
 
