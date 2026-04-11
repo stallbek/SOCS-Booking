@@ -11,14 +11,18 @@ This folder contains the current React frontend for the SOCS Booking project.
 - `Features` section
 - Footer call-to-action
 - Routed login and register overlays
+- Local session handling
+- Protected dashboard shell with separate owner and student variants
+- Reusable dashboard calendar with a right-side schedule list
 
 Current routes:
 
 - `/`
 - `/login`
 - `/register`
+- `/app/dashboard`
 
-Right now, the frontend is mainly focused on presentation and structure. The login and register screens are visual only. They are not connected to backend authentication yet.
+Right now, the frontend still uses a local session rather than backend authentication. Logging in or registering with a McGill email will open the dashboard shell and choose the role from the email domain.
 
 ## Tech stack
 
@@ -64,6 +68,8 @@ Main files:
   - route mapping for `/`, `/login`, and `/register`
 - `src/styles.css`
   - all shared page styling
+- `files.md`
+  - simple guide that explains what the current frontend files do
 
 Components:
 
@@ -71,13 +77,30 @@ Components:
   - main landing page layout
   - hero, sections, footer
   - shows auth overlay when needed
-- `src/components/AuthOverlay.jsx`
+- `src/components/AccountPanel.jsx`
   - login and register overlay panels
-  - currently UI-only
+  - now set a simple local session
 - `src/components/BrandLink.jsx`
   - logo and site wordmark in the header
 - `src/components/HeroCalendar.jsx`
   - animated calendar visual in the hero
+- `src/components/DashboardLayout.jsx`
+  - authenticated header and role-based navigation
+- `src/components/SignedInRoute.jsx`
+  - protects `/app/*`
+- `src/components/WelcomeRoute.jsx`
+  - keeps logged-in users out of login/register screens
+- `src/components/app/ScheduleCalendar.jsx`
+  - reusable month calendar for booking-style views
+
+New folders:
+
+- `src/context/`
+  - current local session state
+- `src/pages/`
+  - current dashboard page
+- `src/utils/`
+  - small date helpers for the calendar and schedule list
 
 ## Design direction
 
@@ -107,6 +130,12 @@ What to avoid:
 - The landing page should explain the booking product, not the implementation details
 - Copy should stay direct and readable
 - The site should feel like a university tool, not a marketing template
+- The dashboard should look like an extension of the landing page
+- Owner and student variants should differ through labels and navigation, not through unrelated styling
+- The dashboard is now arranged as:
+  - calendar on the left
+  - schedule list on the right
+  - all events shown first, then filtered by selected day
 
 ## Before changing copy
 
@@ -125,16 +154,15 @@ The assignment is for a McGill booking application. Keep the language tied to:
 
 - No backend integration yet
 - No real authentication yet
-- No persistence yet
-- No owner dashboard or booking flow wired up yet
+- No real persistence beyond frontend local storage
+- Dashboard still uses temporary local event examples
 - `favicon.ico` is still missing
 
 ## Next frontend steps
 
 - Connect login/register to the real backend
-- Add the authenticated dashboard flow
-- Add owner and student booking views
-- Wire real data into the calendar and booking lists
+- Add owner and student booking views around the dashboard shell
+- Wire real data into the dashboard after backend endpoints are ready
 - Add final responsive cleanup after backend pages exist
 
 

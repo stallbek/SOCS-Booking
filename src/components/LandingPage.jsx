@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import AuthOverlay from './AuthOverlay';
+import AccountPanel from './AccountPanel';
 import BrandLink from './BrandLink';
 import HeroCalendar from './HeroCalendar';
 
@@ -153,7 +153,7 @@ function LandingPage({ authMode }) {
         </footer>
       </div>
 
-      {authMode && <AuthOverlay mode={authMode} />}
+      {authMode && <AccountPanel mode={authMode} />}
     </>
   );
 }
