@@ -5,7 +5,7 @@ import { useSession } from '../context/SessionContext';
 function AccountPanel({ mode }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useSession();
+  const { login, register } = useSession();
   const isRegister = mode === 'register';
   const [feedback, setFeedback] = useState('');
   const [formValues, setFormValues] = useState({
@@ -26,41 +26,67 @@ function AccountPanel({ mode }) {
     }));
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
+const handleSubmit = async (event) => {
 
-    if (isRegister && !formValues.name.trim()) {
-      setFeedback('Enter your name before creating the account.');
-      return;
-    }
+  //stop page refresh from form submit
+  event.preventDefault();
 
-    if (!formValues.email.trim()) {
-      setFeedback('Enter your McGill email address.');
-      return;
-    }
+  //clear old feedback message
+  setFeedback('');
 
-    if (!formValues.password.trim()) {
-      setFeedback('Enter your password.');
-      return;
-    }
+  //for register user must enter a name
+  if (isRegister && !formValues.name.trim()) {
+    setFeedback('Enter your name before creating the account.');
+    return;
+  }
 
-    if (isRegister && formValues.password !== formValues.confirmPassword) {
-      setFeedback('Passwords do not match.');
-      return;
-    }
+  //email is required
+  if (!formValues.email.trim()) {
+    setFeedback('Enter your McGill email address.');
+    return;
+  }
 
-    const result = login({
-      email: formValues.email,
+  //password is required
+  if (!formValues.password.trim()) {
+    setFeedback('Enter your password.');
+    return;
+  }
+
+  //during register both passwords must match
+  if (isRegister && formValues.password !== formValues.confirmPassword) {
+    setFeedback('Passwords do not match.');
+    return;
+  }
+
+  let result;
+
+  //if user is creating account call register
+  if (isRegister) {
+    result = await register({
       name: formValues.name,
+      email: formValues.email,
+      password: formValues.password,
+      confirmPassword: formValues.confirmPassword
     });
+  }
+  else {
+    //otherwise call login
+    result = await login({
+      email: formValues.email,
+      password: formValues.password
+    });
+  }
 
-    if (!result.success) {
-      setFeedback(result.message);
-      return;
-    }
+  //if login/register failed show error
+  if (!result.success) {
+    setFeedback(result.message);
+    return;
+  }
 
-    navigate(redirectTo, { replace: true });
-  };
+  //if successful go to redirect page
+  navigate(redirectTo, { replace: true });
+};
+
 
   return (
     <div aria-modal="true" className="auth-overlay" role="dialog">
