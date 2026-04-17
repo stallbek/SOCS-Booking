@@ -1,90 +1,180 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
-const SESSION_STORAGE_KEY = 'socs-booking-session';
+const AUTH_API_BASE_URL = 'http://localhost:5000/api/auth';
 
+//context used to share session data
 const SessionContext = createContext(null);
 
-function inferRoleFromEmail(email) {
-  if (email.endsWith('@mcgill.ca')) {
-    return 'owner';
-  }
-
-  if (email.endsWith('@mail.mcgill.ca')) {
-    return 'student';
-  }
-
-  return null;
-}
-
-function formatNameFromEmail(email) {
-  return email
-    .split('@')[0]
-    .split(/[._-]+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
-
-function getStoredSession() {
-  const storedValue = window.localStorage.getItem(SESSION_STORAGE_KEY);
-
-  if (!storedValue) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(storedValue);
-  } catch {
-    return null;
-  }
-}
-
 function SessionProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(() => getStoredSession());
+
+  //stores logged in user
+  const [currentUser, setCurrentUser] = useState(null);
+
+  //used while checking session on page load
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (currentUser) {
-      window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(currentUser));
-      return;
-    }
 
-    window.localStorage.removeItem(SESSION_STORAGE_KEY);
-  }, [currentUser]);
+    //check if user already logged in with cookie session
+    const checkSession = async () => {
+      try {
+        const response = await fetch(`${AUTH_API_BASE_URL}/me`, {
+          credentials: 'include'
+        });
 
-  const login = ({ email, name }) => {
-    const trimmedEmail = email.trim().toLowerCase();
-    const trimmedName = name.trim();
-    const role = inferRoleFromEmail(trimmedEmail);
+        //if no valid session then keep user null
+        if (!response.ok) {
+          setCurrentUser(null);
+          return;
+        }
 
-    if (!role) {
+        //get user info from backend
+        const data = await response.json();
+
+        //save logged in user
+        setCurrentUser(data.user);
+
+      } catch (error) {
+
+        //if server error just reset user
+        setCurrentUser(null);
+
+      } finally {
+
+        //done checking session
+        setLoading(false);
+      }
+    };
+
+    //run once when component loads
+    checkSession();
+
+  }, []);
+
+  const login = async ({ email, password }) => {
+    try {
+
+      //send login request
+      const response = await fetch(`${AUTH_API_BASE_URL}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: email,
+          password: password
+        })
+      });
+
+      const data = await response.json();
+
+      //if login failed return message
+      if (!response.ok) {
+        return {
+          success: false,
+          message: data.error
+        };
+      }
+
+      //store logged in user
+      setCurrentUser(data.user);
+
+      return {
+        success: true,
+        user: data.user
+      };
+
+    } catch (error) {
+
+      //backend/server issue
       return {
         success: false,
-        message: 'Use a McGill email ending in @mcgill.ca or @mail.mcgill.ca.',
+        message: 'Something went wrong. Please try again.'
+      };
+    }
+  };
+
+  const register = async ({ name, email, password, confirmPassword }) => {
+  try {
+
+    //send register request to backend
+    const response = await fetch(`${AUTH_API_BASE_URL}/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        name: name,
+        email: email,
+        password: password,
+        confirmPassword: confirmPassword
+      })
+    });
+
+    //read backend response
+    const data = await response.json();
+
+    //if register failed return error message
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.error
       };
     }
 
-    const user = {
-      name: trimmedName || formatNameFromEmail(trimmedEmail),
-      email: trimmedEmail,
-      role,
-    };
-
-    setCurrentUser(user);
+    //save logged in user after successful register
+    setCurrentUser(data.user);
 
     return {
       success: true,
-      user,
+      user: data.user
     };
+
+  } catch (error) {
+
+    //server or network problem
+    return {
+      success: false,
+      message: 'Something went wrong. Please try again.'
+    };
+  }
+};
+
+  const logout = async () => {
+
+    //tell backend to destroy session
+    await fetch(`${AUTH_API_BASE_URL}/logout`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+
+    //clear frontend user
+    setCurrentUser(null);
   };
 
-  const logout = () => setCurrentUser(null);
-
-  return <SessionContext.Provider value={{ currentUser, login, logout }}>{children}</SessionContext.Provider>;
+  return (
+    <SessionContext.Provider
+      value={{
+        currentUser,
+        loading,
+        login,
+        register,
+        logout
+      }}
+    >
+      {children}
+    </SessionContext.Provider>
+  );
 }
 
 function useSession() {
+
+  //get context values
   const context = useContext(SessionContext);
 
+  //must be inside provider
   if (!context) {
     throw new Error('useSession must be used inside SessionProvider.');
   }
