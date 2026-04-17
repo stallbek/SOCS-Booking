@@ -10,10 +10,10 @@ function DashboardLayout() {
   const { currentUser, logout } = useSession();
   const navItems = currentUser.role === 'owner' ? ownerNavItems : studentNavItems;
 
-  const handleLogout = () => {
-    logout();
-    navigate('/', { replace: true });
-  };
+  const handleLogout = async () => {
+  await logout();
+  navigate('/', { replace: true });
+};
 
   return (
     <div className="app-shell">

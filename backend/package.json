@@ -17,6 +17,6 @@
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "mongoose": "^9.3.3",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.1"
   }
 }
