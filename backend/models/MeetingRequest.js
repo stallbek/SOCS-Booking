@@ -1,5 +1,5 @@
 //Type 1 - Meeting request from user to owner (accept or decline)
-
+// Author: Ananya Krishnakumar
 
 const mongoose = require('mongoose');
 
