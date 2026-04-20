@@ -2,6 +2,16 @@ const Slot = require('../models/Slot');
 const User = require('../models/User');
 const { v4: uuidv4 } = require('uuid');
 
+function parseCalendarDate(value) {
+  return new Date(`${value}T12:00:00.000Z`);
+}
+
+function addUtcDays(date, days) {
+  const nextDate = new Date(date);
+  nextDate.setUTCDate(nextDate.getUTCDate() + days);
+  return nextDate;
+}
+
 // OWNER: Slot Management
 // Create a single slot (private by default)
 exports.createSlot = async (req, res) => {
@@ -175,22 +185,21 @@ exports.createOfficeHours = async (req, res) => {
       return res.status(400).json({ error: 'Title, date range, and time options are required.' });
     }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = parseCalendarDate(startDate);
+    const end = parseCalendarDate(endDate);
     const weeks = recurringWeeks || 1;
 
     const slots = [];
 
     // Generate slots for each week in the range
     for (let w = 0; w < weeks; w++) {
-      const weekStart = new Date(start);
-      weekStart.setDate(weekStart.getDate() + w * 7);
+      const weekStart = addUtcDays(start, w * 7);
 
       for (const timeOption of timeOptions) {
         const slotDate = new Date(weekStart);
         // dayOfWeek: 0=Sunday, 1=Monday, ..., 6=Saturday
-        const dayDiff = (timeOption.dayOfWeek - slotDate.getDay() + 7) % 7;
-        slotDate.setDate(slotDate.getDate() + dayDiff);
+        const dayDiff = (timeOption.dayOfWeek - slotDate.getUTCDay() + 7) % 7;
+        slotDate.setUTCDate(slotDate.getUTCDate() + dayDiff);
 
         // Only create if within range
         if (slotDate <= end) {

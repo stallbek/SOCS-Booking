@@ -15,6 +15,18 @@ function parseDayKey(dayKey) {
   return new Date(`${dayKey}T12:00:00`);
 }
 
+function getDatePart(value) {
+  if (typeof value === 'string') {
+    return value.includes('T') ? value.split('T')[0] : value;
+  }
+
+  return getDayKey(value);
+}
+
+function buildDateTime(dateValue, timeValue) {
+  return `${getDatePart(dateValue)}T${timeValue}:00`;
+}
+
 function formatLongDate(value) {
   return new Intl.DateTimeFormat('en-CA', {
     weekday: 'long',
@@ -61,4 +73,4 @@ function groupItemsByDay(items) {
     }));
 }
 
-export { formatLongDate, formatMonthLabel, formatTimeRange, getDayKey, groupItemsByDay, parseDayKey };
+export { buildDateTime, formatLongDate, formatMonthLabel, formatTimeRange, getDatePart, getDayKey, groupItemsByDay, parseDayKey };

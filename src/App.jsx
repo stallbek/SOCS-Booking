@@ -3,6 +3,7 @@ import DashboardLayout from './components/DashboardLayout';
 import SignedInRoute from './components/SignedInRoute';
 import WelcomeRoute from './components/WelcomeRoute';
 import DashboardPage from './pages/DashboardPage';
+import OwnerAvailabilityPage from './pages/OwnerAvailabilityPage';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route element={<DashboardLayout />} path="/app">
           <Route element={<Navigate replace to="/app/dashboard" />} index />
           <Route element={<DashboardPage />} path="dashboard" />
+          <Route element={<OwnerAvailabilityPage />} path="availability" />
         </Route>
       </Route>
 

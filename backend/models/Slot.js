@@ -51,11 +51,17 @@ const slotSchema = new mongoose.Schema({
   // Unique invitation code for sharing slot links
   inviteCode: {
     type: String,
-    unique: true,
-    sparse: true,
-    default: null
+    trim: true
   }
 }, { timestamps: true });
+
+slotSchema.index(
+  { inviteCode: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { inviteCode: { $type: 'string' } }
+  }
+);
 
 // Virtual to check if slot is available for booking
 slotSchema.virtual('isAvailable').get(function () {

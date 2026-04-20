@@ -2,8 +2,17 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import BrandLink from './BrandLink';
 import { useSession } from '../context/SessionContext';
 
-const ownerNavItems = ['Dashboard', 'Availability', 'Invitations'];
-const studentNavItems = ['Dashboard', 'Bookings', 'Owners'];
+const ownerNavItems = [
+  { label: 'Dashboard', to: '/app/dashboard' },
+  { label: 'Availability', to: '/app/availability' },
+  { label: 'Invitations' }
+];
+
+const studentNavItems = [
+  { label: 'Dashboard', to: '/app/dashboard' },
+  { label: 'Bookings' },
+  { label: 'Owners' }
+];
 
 function DashboardLayout() {
   const navigate = useNavigate();
@@ -11,9 +20,9 @@ function DashboardLayout() {
   const navItems = currentUser.role === 'owner' ? ownerNavItems : studentNavItems;
 
   const handleLogout = async () => {
-  await logout();
-  navigate('/', { replace: true });
-};
+    await logout();
+    navigate('/', { replace: true });
+  };
 
   return (
     <div className="app-shell">
@@ -21,13 +30,16 @@ function DashboardLayout() {
         <BrandLink />
 
         <nav aria-label="Dashboard" className="app-nav">
-          <NavLink className={({ isActive }) => `app-nav-link${isActive ? ' app-nav-link-active' : ''}`} to="/app/dashboard">
-            {navItems[0]}
-          </NavLink>
-          {navItems.slice(1).map((item) => (
-            <span className="app-nav-label" key={item}>
-              {item}
-            </span>
+          {navItems.map((item) => (
+            item.to ? (
+              <NavLink className={({ isActive }) => `app-nav-link${isActive ? ' app-nav-link-active' : ''}`} key={item.label} to={item.to}>
+                {item.label}
+              </NavLink>
+            ) : (
+              <span className="app-nav-label" key={item.label}>
+                {item.label}
+              </span>
+            )
           ))}
         </nav>
 

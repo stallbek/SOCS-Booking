@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import ScheduleCalendar from '../components/app/ScheduleCalendar';
 import { useSession } from '../context/SessionContext';
 import {
+  buildDateTime,
   formatLongDate,
   formatTimeRange,
   getDayKey,
@@ -15,8 +16,8 @@ function mapSlotToEvent(slot) {
   return {
     id: slot._id,
     title: slot.title,
-    startAt: `${slot.date}T${slot.startTime}:00`,
-    endAt: `${slot.date}T${slot.endTime}:00`,
+    startAt: buildDateTime(slot.date, slot.startTime),
+    endAt: buildDateTime(slot.date, slot.endTime),
     location: 'TBD',
     note: slot.isAvailable ? 'Available slot' : 'Booked slot',
     withName: 'Not available yet',
