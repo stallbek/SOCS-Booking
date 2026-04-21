@@ -4,6 +4,8 @@ import SignedInRoute from './components/SignedInRoute';
 import WelcomeRoute from './components/WelcomeRoute';
 import DashboardPage from './pages/DashboardPage';
 import OwnerAvailabilityPage from './pages/OwnerAvailabilityPage';
+import StudentBookingsPage from './pages/StudentBookingsPage';
+import StudentOwnersPage from './pages/StudentOwnersPage';
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
           <Route element={<Navigate replace to="/app/dashboard" />} index />
           <Route element={<DashboardPage />} path="dashboard" />
           <Route element={<OwnerAvailabilityPage />} path="availability" />
+          <Route element={<StudentOwnersPage />} path="owners" />
+          <Route element={<StudentBookingsPage />} path="bookings" />
         </Route>
       </Route>
 

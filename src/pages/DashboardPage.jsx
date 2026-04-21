@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { apiRequest } from '../api/api';
 import ScheduleCalendar from '../components/app/ScheduleCalendar';
 import { useSession } from '../context/SessionContext';
 import {
@@ -10,92 +12,78 @@ import {
   parseDayKey
 } from '../utils/date';
 
-function mapSlotToEvent(slot) {
+function mapOwnerAppointmentToEvent(slot) {
+  const bookedName = slot.bookedByName || slot.bookedBy?.name || '';
+  const bookedEmail = slot.bookedByEmail || slot.bookedBy?.email || '';
 
-  //convert backend slot into calendar event
   return {
     id: slot._id,
     title: slot.title,
     startAt: buildDateTime(slot.date, slot.startTime),
     endAt: buildDateTime(slot.date, slot.endTime),
-    location: 'TBD',
-    note: slot.isAvailable ? 'Available slot' : 'Booked slot',
-    withName: 'Not available yet',
-    withEmail: ''
+    location: 'Booked appointment',
+    note: slot.description || 'Student reservation confirmed.',
+    withName: bookedName || 'Student',
+    withEmail: bookedEmail
+  };
+}
+
+function mapStudentAppointmentToEvent(slot) {
+  return {
+    id: slot._id,
+    title: slot.title,
+    startAt: buildDateTime(slot.date, slot.startTime),
+    endAt: buildDateTime(slot.date, slot.endTime),
+    location: slot.slotType === 'office-hours' ? 'Office hours' : 'Reserved appointment',
+    note: slot.description || 'Owner reservation confirmed.',
+    withName: slot.owner?.name || 'Owner',
+    withEmail: slot.owner?.email || ''
   };
 }
 
 function DashboardPage() {
 
-  //get logged in user
   const { currentUser } = useSession();
-
-  //check role
   const isOwner = currentUser.role === 'owner';
-
-  //selected day on calendar
   const [selectedDayKey, setSelectedDayKey] = useState('');
-
-  //all events from backend
   const [events, setEvents] = useState([]);
-
-  //loading state
   const [loadingEvents, setLoadingEvents] = useState(true);
 
   useEffect(() => {
-
-    //load user slots
     const loadEvents = async () => {
+      setLoadingEvents(true);
+
       try {
-        const response = await fetch('http://localhost:5000/api/slots/mine', {
-          credentials: 'include'
-        });
-
-        //if request failed just clear events
-        if (!response.ok) {
-          setEvents([]);
-          return;
+        if (isOwner) {
+          const data = await apiRequest('/slots/mine/details');
+          const bookedSlots = data.filter((slot) => slot.isBooked || slot.bookedBy || slot.bookedByName);
+          setEvents(bookedSlots.map(mapOwnerAppointmentToEvent));
+        } else {
+          const data = await apiRequest('/slots/bookings/mine');
+          setEvents(data.map(mapStudentAppointmentToEvent));
         }
-
-        const data = await response.json();
-
-        //convert slots to frontend format
-        const mappedEvents = data.map(mapSlotToEvent);
-
-        setEvents(mappedEvents);
-
       } catch (error) {
-
-        //server/network issue
         setEvents([]);
-
       } finally {
-
-        //done loading
         setLoadingEvents(false);
       }
     };
 
     loadEvents();
+  }, [isOwner]);
 
-  }, []);
-
-  //if day selected only show those events
   const visibleEvents = selectedDayKey
     ? events.filter((event) => getDayKey(event.startAt) === selectedDayKey)
     : events;
 
-  //group events by date
   const groupedEvents = groupItemsByDay(visibleEvents);
 
-  //heading text changes depending on filter and role
   const eventsHeading = selectedDayKey
     ? `Events on ${formatLongDate(parseDayKey(selectedDayKey))}`
     : isOwner
-      ? 'All booked appointments'
-      : 'All reserved appointments';
+      ? 'Booked appointments'
+      : 'Reserved appointments';
 
-  //loading screen
   if (loadingEvents) {
     return <div>Loading dashboard...</div>;
   }
@@ -113,8 +101,8 @@ function DashboardPage() {
 
         <p className="dashboard-copy">
           {isOwner
-            ? 'Your schedule and booked appointments.'
-            : 'Your schedule and reserved appointments.'}
+            ? 'Booked student appointments appear here.'
+            : 'Your reserved appointments appear here.'}
         </p>
 
       </section>
@@ -232,8 +220,20 @@ function DashboardPage() {
           ) : (
 
             <div className="dashboard-empty-state">
-              <h3>Nothing</h3>
-              <p>Choose another day or return to the full list.</p>
+              <h3>{isOwner ? 'No booked appointments yet' : 'No bookings yet'}</h3>
+              <p>
+                {selectedDayKey
+                  ? 'Choose another day or return to the full list.'
+                  : isOwner
+                    ? 'New student reservations will appear here.'
+                    : 'Reserve an office-hour slot to start building your schedule.'}
+              </p>
+
+              {!selectedDayKey && !isOwner ? (
+                <Link className="button button-primary dashboard-card-link" to="/app/owners">
+                  Browse owners
+                </Link>
+              ) : null}
             </div>
 
           )}
