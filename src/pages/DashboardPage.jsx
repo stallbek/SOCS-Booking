@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiRequest } from '../api/api';
-import ScheduleCalendar from '../components/app/ScheduleCalendar';
+import ScheduleCalendar from '../components/ScheduleCalendar';
 import { useSession } from '../context/SessionContext';
 import {
   buildDateTime,

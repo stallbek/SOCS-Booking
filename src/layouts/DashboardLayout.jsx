@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import BrandLink from './BrandLink';
+import BrandLink from '../components/BrandLink';
 import { useSession } from '../context/SessionContext';
 
 const ownerNavItems = [

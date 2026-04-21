@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useSession } from '../context/SessionContext';
-import LandingPage from './LandingPage';
+import LandingPage from '../pages/LandingPage';
 
 function WelcomeRoute({ mode }) {
 

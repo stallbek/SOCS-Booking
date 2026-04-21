@@ -1,11 +1,11 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import DashboardLayout from './components/DashboardLayout';
-import SignedInRoute from './components/SignedInRoute';
-import WelcomeRoute from './components/WelcomeRoute';
+import DashboardLayout from './layouts/DashboardLayout';
 import DashboardPage from './pages/DashboardPage';
 import OwnerAvailabilityPage from './pages/OwnerAvailabilityPage';
 import StudentBookingsPage from './pages/StudentBookingsPage';
 import StudentOwnersPage from './pages/StudentOwnersPage';
+import SignedInRoute from './routes/SignedInRoute';
+import WelcomeRoute from './routes/WelcomeRoute';
 
 function App() {
   return (

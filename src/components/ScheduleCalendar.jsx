@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { formatMonthLabel, getDayKey, parseDayKey } from '../../utils/date';
+import { formatMonthLabel, getDayKey, parseDayKey } from '../utils/date';
 
 const weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 

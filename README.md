@@ -21,6 +21,9 @@ Current routes:
 - `/login`
 - `/register`
 - `/app/dashboard`
+- `/app/availability`
+- `/app/owners`
+- `/app/bookings`
 
 Right now, the frontend still uses a local session rather than backend authentication. Logging in or registering with a McGill email will open the dashboard shell and choose the role from the email domain.
 
@@ -68,15 +71,11 @@ Main files:
   - route mapping for `/`, `/login`, and `/register`
 - `src/styles.css`
   - all shared page styling
-- `files.md`
-  - simple guide that explains what the current frontend files do
+- `../files.md`
+  - simple guide outside `frontend/` that explains what the current frontend files do
 
 Components:
 
-- `src/components/LandingPage.jsx`
-  - main landing page layout
-  - hero, sections, footer
-  - shows auth overlay when needed
 - `src/components/AccountPanel.jsx`
   - login and register overlay panels
   - now set a simple local session
@@ -84,23 +83,30 @@ Components:
   - logo and site wordmark in the header
 - `src/components/HeroCalendar.jsx`
   - animated calendar visual in the hero
-- `src/components/DashboardLayout.jsx`
-  - authenticated header and role-based navigation
-- `src/components/SignedInRoute.jsx`
-  - protects `/app/*`
-- `src/components/WelcomeRoute.jsx`
-  - keeps logged-in users out of login/register screens
-- `src/components/app/ScheduleCalendar.jsx`
+- `src/components/ScheduleCalendar.jsx`
   - reusable month calendar for booking-style views
 
 New folders:
 
+- `src/layouts/`
+  - shared page shells such as `DashboardLayout`
+- `src/routes/`
+  - route guards such as `SignedInRoute` and `WelcomeRoute`
 - `src/context/`
   - current local session state
 - `src/pages/`
-  - current dashboard page
+  - routed screens such as `LandingPage`, dashboard, availability, owners, and bookings
+- `src/components/ownerAvailability/`
+  - owner availability form, selector, preview, schedule list, and support helpers
 - `src/utils/`
   - small date helpers for the calendar and schedule list
+
+Owner availability structure:
+
+- `src/pages/OwnerAvailabilityPage.jsx`
+  - keeps owner availability state, API loading, create, and delete handlers
+- `src/components/ownerAvailability/`
+  - contains the booking-type selector, office-hour form pieces, preview, schedule list, constants, and helper functions
 
 ## Design direction
 

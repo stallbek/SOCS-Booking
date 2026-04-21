@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import AccountPanel from './AccountPanel';
-import BrandLink from './BrandLink';
-import HeroCalendar from './HeroCalendar';
+import AccountPanel from '../components/AccountPanel';
+import BrandLink from '../components/BrandLink';
+import HeroCalendar from '../components/HeroCalendar';
 
 const productName = 'SOCS Booking';
 
