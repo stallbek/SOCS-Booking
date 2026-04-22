@@ -20,8 +20,8 @@ function OfficeHoursForm({
   timeOptions
 }) {
   const isRecurring = scheduleMode === 'recurring';
-  const heading = isRecurring ? 'Create recurring availability' : 'Create single-date availability';
-  const submitLabel = saving ? 'Saving' : heading;
+  const heading = isRecurring ? 'Create recurring OH' : 'Create single OH';
+  const submitLabel = saving ? 'Saving' : 'Create OH';
 
   return (
     <section className="dashboard-card availability-form-card">

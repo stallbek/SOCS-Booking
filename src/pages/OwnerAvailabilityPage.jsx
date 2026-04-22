@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { apiRequest } from '../api/api';
 import ScheduleCalendar from '../components/ScheduleCalendar';
 import { useSession } from '../context/SessionContext';
+import { createMailtoAction } from '../utils/bookings';
 import {
   formatLongDate,
   getDayKey,
@@ -11,6 +12,7 @@ import {
 import AvailabilityEventsSection from '../components/ownerAvailability/AvailabilityEventsSection';
 import BookingTypePlaceholder from '../components/ownerAvailability/BookingTypePlaceholder';
 import BookingTypeSelector from '../components/ownerAvailability/BookingTypeSelector';
+import MeetingRequestsPanel from '../components/ownerAvailability/MeetingRequestsPanel';
 import OfficeHoursForm from '../components/ownerAvailability/OfficeHoursForm';
 import {
   createInitialOfficeHoursForm,
@@ -42,7 +44,9 @@ function OwnerAvailabilityPage() {
   const [loadingSlots, setLoadingSlots] = useState(isOwner);
   const [saving, setSaving] = useState(false);
   const [deletingKey, setDeletingKey] = useState('');
-  const [feedback, setFeedback] = useState('');
+  const [formFeedback, setFormFeedback] = useState('');
+  const [scheduleFeedback, setScheduleFeedback] = useState('');
+  const [noticeActions, setNoticeActions] = useState([]);
 
   const loadSlots = async () => {
     if (!isOwner) {
@@ -55,7 +59,7 @@ function OwnerAvailabilityPage() {
       const data = await apiRequest('/slots/office-hours/mine');
       setSlots(filterOfficeHoursSlots(data));
     } catch (error) {
-      setFeedback(error.message);
+      setScheduleFeedback(error.message);
       setSlots([]);
     } finally {
       setLoadingSlots(false);
@@ -137,7 +141,7 @@ function OwnerAvailabilityPage() {
   const handleScheduleModeChange = (nextMode) => {
     setScheduleMode(nextMode);
     setTimeOptions([]);
-    setFeedback('');
+    setFormFeedback('');
   };
 
   const addTimeOption = (dayOfWeek = '') => {
@@ -150,12 +154,14 @@ function OwnerAvailabilityPage() {
 
   const handleCreateOfficeHours = async (event) => {
     event.preventDefault();
-    setFeedback('');
+    setFormFeedback('');
+    setScheduleFeedback('');
+    setNoticeActions([]);
 
     const validationMessage = getCreateValidationMessage(scheduleMode, officeHoursForm, timeOptions, slotPreviewCount);
 
     if (validationMessage) {
-      setFeedback(validationMessage);
+      setFormFeedback(validationMessage);
       return;
     }
 
@@ -174,31 +180,35 @@ function OwnerAvailabilityPage() {
         description: ''
       }));
       setTimeOptions([]);
-      setFeedback(`Created ${data.slotsCreated || slotPreviewCount} office-hour slots.`);
+      setFormFeedback(`Created ${data.slotsCreated || slotPreviewCount} office-hour slots.`);
       await loadSlots();
     } catch (error) {
-      setFeedback(error.message);
+      setFormFeedback(error.message);
     } finally {
       setSaving(false);
     }
   };
 
   const handleDeleteSlot = async (slotId) => {
-    const shouldDelete = window.confirm('Delete this availability slot?');
+    const shouldDelete = window.confirm('Delete this OH slot?');
 
     if (!shouldDelete) {
       return;
     }
 
-    setFeedback('');
+    setScheduleFeedback('');
+    setNoticeActions([]);
     setDeletingKey(`slot:${slotId}`);
 
     try {
-      await apiRequest(`/slots/${slotId}`, 'DELETE');
-      setFeedback('Slot deleted.');
+      const data = await apiRequest(`/slots/${slotId}`, 'DELETE');
+      const notifyAction = createMailtoAction(data.notifyEmail, 'Email student');
+
+      setNoticeActions(notifyAction ? [notifyAction] : []);
+      setScheduleFeedback('Slot deleted.');
       await loadSlots();
     } catch (error) {
-      setFeedback(error.message);
+      setScheduleFeedback(error.message);
     } finally {
       setDeletingKey('');
     }
@@ -208,7 +218,7 @@ function OwnerAvailabilityPage() {
     const slotsInSeries = slots.filter((slot) => slot.recurringGroupId === recurringGroupId);
 
     if (slotsInSeries.length < 2) {
-      setFeedback('This office-hour item does not have a linked series to delete.');
+      setScheduleFeedback('This office-hour item does not have a linked series to delete.');
       return;
     }
 
@@ -218,21 +228,31 @@ function OwnerAvailabilityPage() {
       return;
     }
 
-    setFeedback('');
+    setScheduleFeedback('');
+    setNoticeActions([]);
     setDeletingKey(`series:${recurringGroupId}`);
 
     let deletedCount = 0;
+    const nextNoticeActions = [];
 
     try {
       for (const slot of slotsInSeries) {
-        await apiRequest(`/slots/${slot._id}`, 'DELETE');
+        const data = await apiRequest(`/slots/${slot._id}`, 'DELETE');
+        const notifyAction = createMailtoAction(data.notifyEmail, `Email student ${nextNoticeActions.length + 1}`);
+
+        if (notifyAction) {
+          nextNoticeActions.push(notifyAction);
+        }
+
         deletedCount += 1;
       }
 
-      setFeedback(`Deleted ${deletedCount} office-hour slots from this series.`);
+      setNoticeActions(nextNoticeActions);
+      setScheduleFeedback(`Deleted ${deletedCount} office-hour slots from this series.`);
       await loadSlots();
     } catch (error) {
-      setFeedback(
+      setNoticeActions(nextNoticeActions);
+      setScheduleFeedback(
         deletedCount
           ? `Deleted ${deletedCount} slot${deletedCount === 1 ? '' : 's'} before the series delete stopped. ${error.message}`
           : error.message
@@ -260,10 +280,10 @@ function OwnerAvailabilityPage() {
   return (
     <div className="dashboard-page availability-page">
       <section className="dashboard-card dashboard-intro-card">
-        <p className="eyebrow">Owner availability</p>
-        <h1>Manage availability.</h1>
+        <p className="eyebrow">Owner office hours</p>
+        <h1>Create OH.</h1>
         <p className="dashboard-copy">
-          Create office-hour availability that students can reserve directly.
+          Choose recurring or single OH, then add the title and time blocks students can reserve.
         </p>
       </section>
 
@@ -272,9 +292,11 @@ function OwnerAvailabilityPage() {
         selectedBookingTypeId={selectedBookingTypeId}
       />
 
-      {selectedBookingType.id === 'type-3' ? (
+      {selectedBookingType.id === 'type-1' ? (
+        <MeetingRequestsPanel />
+      ) : selectedBookingType.id === 'type-3' ? (
         <OfficeHoursForm
-          feedback={feedback}
+          feedback={formFeedback}
           officeHoursForm={officeHoursForm}
           onAddTimeOption={addTimeOption}
           onFieldChange={handleOfficeHoursFieldChange}
@@ -294,25 +316,29 @@ function OwnerAvailabilityPage() {
         <BookingTypePlaceholder bookingType={selectedBookingType} />
       )}
 
-      <div className="dashboard-layout">
-        <ScheduleCalendar
-          items={events}
-          onDaySelect={setSelectedDayKey}
-          selectedDayKey={selectedDayKey}
-        />
+      {selectedBookingType.id === 'type-3' ? (
+        <div className="dashboard-layout">
+          <ScheduleCalendar
+            items={events}
+            onDaySelect={setSelectedDayKey}
+            selectedDayKey={selectedDayKey}
+          />
 
-        <AvailabilityEventsSection
-          deletingKey={deletingKey}
-          groupedEvents={groupedEvents}
-          loadingSlots={loadingSlots}
-          onClearSelectedDay={() => setSelectedDayKey('')}
-          onDeleteSeries={handleDeleteSeries}
-          onDeleteSlot={handleDeleteSlot}
-          scheduleHeading={scheduleHeading}
-          selectedDayKey={selectedDayKey}
-          seriesCountByGroup={seriesCountByGroup}
-        />
-      </div>
+          <AvailabilityEventsSection
+            deletingKey={deletingKey}
+            feedback={scheduleFeedback}
+            groupedEvents={groupedEvents}
+            loadingSlots={loadingSlots}
+            noticeActions={noticeActions}
+            onClearSelectedDay={() => setSelectedDayKey('')}
+            onDeleteSeries={handleDeleteSeries}
+            onDeleteSlot={handleDeleteSlot}
+            scheduleHeading={scheduleHeading}
+            selectedDayKey={selectedDayKey}
+            seriesCountByGroup={seriesCountByGroup}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

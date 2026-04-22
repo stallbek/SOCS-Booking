@@ -935,6 +935,13 @@ h3 {
   font-weight: 700;
 }
 
+.notification-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  align-items: center;
+}
+
 .auth-submit {
   width: 100%;
   min-height: 2.9rem;
@@ -1390,10 +1397,98 @@ h3 {
   font-weight: 700;
 }
 
+.calendar-day-dots {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.28rem;
+  min-height: 1.25rem;
+}
+
+.booking-type-dot {
+  display: inline-flex;
+  width: 0.62rem;
+  height: 0.62rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+}
+
+.booking-type-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.28rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.booking-type-dot-type-1 {
+  background: var(--mcgill-red);
+}
+
+.booking-type-dot-type-2 {
+  background: var(--black);
+}
+
+.booking-type-dot-type-3 {
+  background: #1f7a5a;
+}
+
 .calendar-day-meta {
   color: var(--text-muted);
   font-size: 0.78rem;
   line-height: 1.4;
+}
+
+.dashboard-filter-card {
+  gap: 0.85rem;
+}
+
+.booking-type-filter,
+.booking-type-filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.booking-type-filter {
+  justify-content: space-between;
+}
+
+.booking-type-filter-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #ffffff;
+  color: var(--gray-700);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.booking-type-filter-button strong {
+  min-width: 1.35rem;
+  padding: 0.1rem 0.35rem;
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--gray-700);
+  font-size: 0.76rem;
+  text-align: center;
+}
+
+.booking-type-filter-button-active {
+  border-color: rgba(158, 9, 24, 0.28);
+  background: rgba(237, 27, 47, 0.06);
+  color: var(--black);
 }
 
 .dashboard-show-all {
@@ -1430,6 +1525,11 @@ h3 {
   border: 1px solid rgba(0, 0, 0, 0.08);
   background: rgba(255, 255, 255, 0.8);
   border-left: 3px solid var(--mcgill-red);
+}
+
+.dashboard-event-row-past {
+  border-left-color: var(--gray-500);
+  opacity: 0.78;
 }
 
 .dashboard-event-time,
@@ -1476,6 +1576,9 @@ h3 {
 }
 
 .dashboard-event-actions {
+  display: grid;
+  gap: 0.55rem;
+  justify-items: start;
   align-self: center;
 }
 
@@ -1638,6 +1741,12 @@ h3 {
   text-transform: uppercase;
 }
 
+.dashboard-badge-muted {
+  background: rgba(102, 102, 102, 0.08);
+  border-color: rgba(102, 102, 102, 0.18);
+  color: var(--gray-700);
+}
+
 .owner-directory-item-active {
   border-left-color: var(--mcgill-red);
   background: rgba(237, 27, 47, 0.06);
@@ -1679,6 +1788,96 @@ h3 {
 .office-hours-compose {
   display: grid;
   gap: 1rem;
+}
+
+.meeting-request-card,
+.meeting-list,
+.meeting-details-fields {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.meeting-details-fields {
+  padding: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.meeting-date-time-grid {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) repeat(2, minmax(120px, 0.6fr));
+  gap: 0.85rem;
+  align-items: end;
+}
+
+.meeting-request-row {
+  grid-template-columns: minmax(142px, 0.38fr) minmax(0, 1fr) minmax(118px, auto);
+}
+
+.meeting-request-actions {
+  align-self: start;
+}
+
+.group-invite-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 0.85rem;
+  align-items: end;
+}
+
+.group-meeting-panel,
+.meeting-option-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.group-meeting-summary {
+  position: static;
+}
+
+.meeting-option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-left: 4px solid rgba(0, 0, 0, 0.16);
+  background: rgba(246, 246, 246, 0.9);
+}
+
+.meeting-option-row-selected {
+  border-left-color: var(--mcgill-red);
+  background: rgba(237, 27, 47, 0.06);
+}
+
+.meeting-option-main {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.meeting-option-main span {
+  color: var(--gray-600);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.meeting-option-main p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.meeting-option-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.45rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #ffffff;
+  font-weight: 800;
 }
 
 .calendar-compose-top {
@@ -2049,6 +2248,8 @@ h3 {
   .dashboard-event-row,
   .booking-type-grid,
   .owner-directory-toolbar,
+  .group-invite-row,
+  .meeting-date-time-grid,
   .office-hours-mode-toggle,
   .calendar-series-grid,
   .calendar-method-layout,

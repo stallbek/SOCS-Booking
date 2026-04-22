@@ -1,32 +1,34 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiRequest } from '../api/api';
+import StudentMeetingRequestsPanel from '../components/meeting/StudentMeetingRequestsPanel';
+import NotificationActions from '../components/NotificationActions';
 import ScheduleCalendar from '../components/ScheduleCalendar';
 import { useSession } from '../context/SessionContext';
 import {
-  buildDateTime,
   formatLongDate,
   formatTimeRange,
   getDayKey,
   groupItemsByDay,
   parseDayKey
 } from '../utils/date';
-
-function filterOfficeHoursSlots(slots) {
-  return (Array.isArray(slots) ? slots : []).filter((slot) => slot.slotType === 'office-hours');
-}
+import {
+  createMailtoAction,
+  hasSlotStarted,
+  mapStudentAppointmentEvent
+} from '../utils/bookings';
 
 function mapBookingToEvent(slot) {
+  const appointment = mapStudentAppointmentEvent(slot);
+  const isPast = hasSlotStarted(slot);
+
   return {
-    id: slot._id,
-    title: slot.title,
-    startAt: buildDateTime(slot.date, slot.startTime),
-    endAt: buildDateTime(slot.date, slot.endTime),
-    description: slot.description || '',
+    ...appointment,
     ownerName: slot.owner?.name || 'Owner',
     ownerEmail: slot.owner?.email || '',
-    statusLabel: 'Reserved',
-    note: 'Reserved office-hour slot.'
+    description: slot.description || '',
+    isPast,
+    note: isPast ? 'Reserved appointment has passed.' : 'Reserved appointment.'
   };
 }
 
@@ -38,6 +40,7 @@ function StudentBookingsPage() {
   const [loadingBookings, setLoadingBookings] = useState(isStudent);
   const [feedback, setFeedback] = useState('');
   const [cancelSlotId, setCancelSlotId] = useState('');
+  const [noticeActions, setNoticeActions] = useState([]);
 
   const loadBookings = async () => {
     if (!isStudent) {
@@ -48,7 +51,7 @@ function StudentBookingsPage() {
 
     try {
       const data = await apiRequest('/slots/bookings/mine');
-      setBookings(filterOfficeHoursSlots(data));
+      setBookings(Array.isArray(data) ? data : []);
     } catch (error) {
       setFeedback(error.message);
       setBookings([]);
@@ -82,10 +85,14 @@ function StudentBookingsPage() {
     }
 
     setFeedback('');
+    setNoticeActions([]);
     setCancelSlotId(slotId);
 
     try {
-      await apiRequest(`/slots/${slotId}/cancel-booking`, 'DELETE');
+      const data = await apiRequest(`/slots/${slotId}/cancel-booking`, 'DELETE');
+      const notifyAction = createMailtoAction(data.notifyOwnerEmail, 'Email owner');
+
+      setNoticeActions(notifyAction ? [notifyAction] : []);
       setFeedback('Booking cancelled.');
       await loadBookings();
     } catch (error) {
@@ -102,7 +109,7 @@ function StudentBookingsPage() {
           <p className="eyebrow">Bookings</p>
           <h1>Student account required.</h1>
           <p className="dashboard-copy">
-            Reserved office-hour slots are shown for student accounts. Owner accounts review appointments from the dashboard.
+            Student accounts can review accepted bookings and sent meeting requests.
           </p>
         </section>
       </div>
@@ -112,17 +119,17 @@ function StudentBookingsPage() {
   return (
     <div className="dashboard-page student-bookings-page">
       <section className="dashboard-card dashboard-intro-card">
-        <p className="eyebrow">Type 3 booking</p>
-        <h1>Manage office-hour bookings.</h1>
+        <p className="eyebrow">Student bookings</p>
+        <h1>Manage bookings.</h1>
         <p className="dashboard-copy">
-          Review your reserved office hours, email the owner, or cancel a reservation you no longer need.
+          Review accepted bookings, email the owner, cancel a reservation, and track Type 1 requests.
         </p>
       </section>
 
       <section className="dashboard-card owner-summary-card">
         <div>
           <p className="eyebrow">Overview</p>
-          <h2>{events.length} active office-hour booking{events.length === 1 ? '' : 's'}</h2>
+          <h2>{events.length} booking{events.length === 1 ? '' : 's'}</h2>
           <p className="dashboard-copy">
             {ownerCount} owner{ownerCount === 1 ? '' : 's'} in your current schedule.
           </p>
@@ -139,6 +146,8 @@ function StudentBookingsPage() {
           </div>
         </div>
       </section>
+
+      <StudentMeetingRequestsPanel />
 
       <div className="dashboard-layout">
         <ScheduleCalendar
@@ -166,12 +175,17 @@ function StudentBookingsPage() {
             ) : null}
           </div>
 
-          {feedback ? <div className="auth-notice">{feedback}</div> : null}
+          {feedback || noticeActions.length ? (
+            <div className="auth-notice">
+              {feedback ? <span>{feedback}</span> : null}
+              <NotificationActions actions={noticeActions} />
+            </div>
+          ) : null}
 
           {loadingBookings ? (
             <div className="dashboard-empty-state">
               <h3>Loading bookings</h3>
-              <p>Checking your reserved office-hour schedule.</p>
+              <p>Checking your reserved appointment schedule.</p>
             </div>
           ) : groupedEvents.length ? (
             <div className="dashboard-event-groups">
@@ -181,7 +195,10 @@ function StudentBookingsPage() {
 
                   <div className="dashboard-event-list">
                     {group.items.map((event) => (
-                      <article className="dashboard-event-row student-booking-event-row" key={event.id}>
+                      <article
+                        className={`dashboard-event-row student-booking-event-row${event.isPast ? ' dashboard-event-row-past' : ''}`}
+                        key={event.id}
+                      >
                         <div className="dashboard-event-time">
                           <strong>{formatTimeRange(event.startAt, event.endAt)}</strong>
                           <span>{event.statusLabel}</span>
@@ -190,7 +207,9 @@ function StudentBookingsPage() {
                         <div className="dashboard-event-main">
                           <div className="dashboard-event-head">
                             <h3>{event.title}</h3>
-                            <span className="dashboard-badge">{event.statusLabel}</span>
+                            <span className={`dashboard-badge${event.isPast ? ' dashboard-badge-muted' : ''}`}>
+                              {event.statusLabel}
+                            </span>
                           </div>
 
                           <p>Owner: {event.ownerName}</p>
@@ -205,14 +224,18 @@ function StudentBookingsPage() {
                             </a>
                           ) : null}
 
-                          <button
-                            className="text-link booking-cancel-button"
-                            disabled={cancelSlotId === event.id}
-                            onClick={() => handleCancelBooking(event.id)}
-                            type="button"
-                          >
-                            {cancelSlotId === event.id ? 'Cancelling' : 'Cancel booking'}
-                          </button>
+                          {event.isPast ? (
+                            <span className="booking-status-text">Completed</span>
+                          ) : (
+                            <button
+                              className="text-link booking-cancel-button"
+                              disabled={cancelSlotId === event.id}
+                              onClick={() => handleCancelBooking(event.id)}
+                              type="button"
+                            >
+                              {cancelSlotId === event.id ? 'Cancelling' : 'Cancel booking'}
+                            </button>
+                          )}
                         </div>
                       </article>
                     ))}
@@ -223,7 +246,7 @@ function StudentBookingsPage() {
           ) : (
             <div className="dashboard-empty-state">
               <h3>No bookings yet</h3>
-              <p>Reserve an office-hour slot to start building your schedule.</p>
+              <p>Accepted requests and reserved office-hour slots will appear here.</p>
               <Link className="button button-primary dashboard-card-link" to="/app/owners">
                 Browse owners
               </Link>

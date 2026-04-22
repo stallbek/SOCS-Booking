@@ -1,10 +1,15 @@
 import { bookingTypes, weekdayOptions } from './constants';
 import {
-  buildDateTime,
   formatLongDate,
   getDayKey,
   parseDayKey
 } from '../../utils/date';
+import {
+  filterOfficeHoursSlots,
+  getBookingTypeFromSlot,
+  getOwnerSlotState,
+  getSlotDateTimes
+} from '../../utils/bookings';
 
 function parseDateInput(value) {
   return new Date(`${value}T12:00:00`);
@@ -41,34 +46,39 @@ function getTimeOptionSortKey(option, scheduleMode) {
   return option.startTime;
 }
 
+function getTimeMinutes(value) {
+  const [hours, minutes] = value.split(':').map(Number);
+  return (hours * 60) + minutes;
+}
+
+function isDateBeforeToday(value) {
+  return value && value < getDayKey(new Date());
+}
+
 export function getSelectedBookingType(typeId) {
   return bookingTypes.find((type) => type.id === typeId) || bookingTypes[2];
 }
 
-export function filterOfficeHoursSlots(slots) {
-  return (Array.isArray(slots) ? slots : []).filter((slot) => slot.slotType === 'office-hours');
-}
+export { filterOfficeHoursSlots };
 
 export function mapSlotToEvent(slot) {
-  const bookedName = slot.bookedByName || slot.bookedBy?.name || '';
-  const bookedEmail = slot.bookedByEmail || slot.bookedBy?.email || '';
-  const isBooked = Boolean(bookedName || bookedEmail || slot.bookedBy);
-  const statusLabel = isBooked ? 'Reserved' : 'Available';
+  const { startAt, endAt } = getSlotDateTimes(slot);
+  const state = getOwnerSlotState(slot);
 
   return {
     id: slot._id,
+    bookingType: getBookingTypeFromSlot(slot),
     title: slot.title,
-    startAt: buildDateTime(slot.date, slot.startTime),
-    endAt: buildDateTime(slot.date, slot.endTime),
+    startAt,
+    endAt,
     description: slot.description || '',
-    statusLabel,
-    isBooked,
-    bookedName,
-    bookedEmail,
+    statusLabel: state.statusLabel,
+    isBooked: state.isBooked,
+    isPast: state.isPast,
+    bookedName: state.bookedName,
+    bookedEmail: state.bookedEmail,
     recurringGroupId: slot.recurringGroupId || '',
-    note: isBooked
-      ? `Reserved by ${bookedName || bookedEmail}`
-      : 'Open for student booking.'
+    note: state.note
   };
 }
 
@@ -163,8 +173,8 @@ export function getPreviewSummary(scheduleMode, officeHoursForm, seriesEndDate) 
   }
 
   return officeHoursForm.singleDate
-    ? `Single-date availability on ${formatLongDate(parseDayKey(officeHoursForm.singleDate))}`
-    : 'Choose a date for this availability.';
+    ? `Single OH on ${formatLongDate(parseDayKey(officeHoursForm.singleDate))}`
+    : 'Choose a date for this OH.';
 }
 
 export function buildOfficeHoursPayload(scheduleMode, officeHoursForm, timeOptions, seriesEndDate) {
@@ -208,8 +218,16 @@ export function getCreateValidationMessage(scheduleMode, officeHoursForm, timeOp
     return 'Choose the first week date.';
   }
 
+  if (scheduleMode === 'recurring' && isDateBeforeToday(officeHoursForm.startDate)) {
+    return 'Choose today or a future first week date.';
+  }
+
   if (scheduleMode === 'single' && !officeHoursForm.singleDate) {
     return 'Choose the session date.';
+  }
+
+  if (scheduleMode === 'single' && isDateBeforeToday(officeHoursForm.singleDate)) {
+    return 'Choose today or a future session date.';
   }
 
   if (!timeOptions.length) {
@@ -232,6 +250,40 @@ export function getCreateValidationMessage(scheduleMode, officeHoursForm, timeOp
 
   if (timeOptions.some((option) => !option.startTime || !option.endTime || option.startTime >= option.endTime)) {
     return 'Each time block needs an end time after its start time.';
+  }
+
+  const seenBlocks = new Set();
+  const blocksByDay = new Map();
+
+  for (const option of timeOptions) {
+    const dayKey = scheduleMode === 'recurring' ? String(option.dayOfWeek) : officeHoursForm.singleDate;
+    const blockKey = `${dayKey}-${option.startTime}-${option.endTime}`;
+    const block = {
+      start: getTimeMinutes(option.startTime),
+      end: getTimeMinutes(option.endTime)
+    };
+
+    if (seenBlocks.has(blockKey)) {
+      return 'Remove duplicate time blocks.';
+    }
+
+    seenBlocks.add(blockKey);
+
+    if (!blocksByDay.has(dayKey)) {
+      blocksByDay.set(dayKey, []);
+    }
+
+    blocksByDay.get(dayKey).push(block);
+  }
+
+  for (const blocks of blocksByDay.values()) {
+    const sortedBlocks = [...blocks].sort((firstBlock, secondBlock) => firstBlock.start - secondBlock.start);
+
+    for (let index = 1; index < sortedBlocks.length; index += 1) {
+      if (sortedBlocks[index].start < sortedBlocks[index - 1].end) {
+        return 'Time blocks on the same day cannot overlap.';
+      }
+    }
   }
 
   if (!slotPreviewCount) {

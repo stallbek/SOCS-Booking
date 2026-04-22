@@ -1,9 +1,12 @@
 import { formatTimeRange } from '../../utils/date';
+import NotificationActions from '../NotificationActions';
 
 function AvailabilityEventsSection({
   deletingKey,
+  feedback,
   groupedEvents,
   loadingSlots,
+  noticeActions = [],
   onClearSelectedDay,
   onDeleteSeries,
   onDeleteSlot,
@@ -30,6 +33,13 @@ function AvailabilityEventsSection({
         ) : null}
       </div>
 
+      {feedback || noticeActions.length ? (
+        <div className="auth-notice">
+          {feedback ? <span>{feedback}</span> : null}
+          <NotificationActions actions={noticeActions} />
+        </div>
+      ) : null}
+
       {loadingSlots ? (
         <div className="dashboard-empty-state">
           <h3>Loading</h3>
@@ -49,7 +59,10 @@ function AvailabilityEventsSection({
                   const isDeletingSeries = deletingKey === `series:${event.recurringGroupId}`;
 
                   return (
-                    <article className="dashboard-event-row availability-event-row" key={event.id}>
+                    <article
+                      className={`dashboard-event-row availability-event-row${event.isPast ? ' dashboard-event-row-past' : ''}`}
+                      key={event.id}
+                    >
                       <div className="dashboard-event-time">
                         <strong>{formatTimeRange(event.startAt, event.endAt)}</strong>
                         <span>{event.statusLabel}</span>
@@ -58,7 +71,9 @@ function AvailabilityEventsSection({
                       <div className="dashboard-event-main">
                         <div className="dashboard-event-head">
                           <h3>{event.title}</h3>
-                          <span className="dashboard-badge">{event.statusLabel}</span>
+                          <span className={`dashboard-badge${event.isPast ? ' dashboard-badge-muted' : ''}`}>
+                            {event.statusLabel}
+                          </span>
                         </div>
 
                         {event.description ? <p>{event.description}</p> : null}
@@ -101,8 +116,8 @@ function AvailabilityEventsSection({
         </div>
       ) : (
         <div className="dashboard-empty-state">
-          <h3>No availability yet</h3>
-          <p>Create office-hour availability to begin.</p>
+          <h3>No OH slots yet</h3>
+          <p>Create OH slots to begin.</p>
         </div>
       )}
     </section>

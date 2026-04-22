@@ -5,7 +5,7 @@ import { getCustomDateSummary, getTimeOptionKey } from './utils';
 function getTopCopy(scheduleMode) {
   return scheduleMode === 'recurring'
     ? 'Set a weekly schedule that repeats for the selected number of weeks.'
-    : 'Set availability for one specific date.';
+    : 'Set OH times for one specific date.';
 }
 
 function getPatternHeading(scheduleMode, singleDate) {

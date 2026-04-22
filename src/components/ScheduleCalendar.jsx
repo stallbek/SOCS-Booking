@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { formatMonthLabel, getDayKey, parseDayKey } from '../utils/date';
+import { formatLongDate, formatMonthLabel, getDayKey, parseDayKey } from '../utils/date';
+import { allBookingTypeIds, getBookingTypeMeta } from '../utils/bookings';
 
 const weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -45,15 +46,22 @@ function ScheduleCalendar({ items, onDaySelect, selectedDayKey, title }) {
     }
   }, [selectedDayKey]);
 
-  const itemCountByDay = useMemo(() => {
-    const counts = new Map();
+  const itemCountsByDay = useMemo(() => {
+    const countsByDay = new Map();
 
     items.forEach((item) => {
       const dayKey = getDayKey(item.startAt);
-      counts.set(dayKey, (counts.get(dayKey) || 0) + 1);
+      const bookingType = item.bookingType || 'type-1';
+
+      if (!countsByDay.has(dayKey)) {
+        countsByDay.set(dayKey, new Map());
+      }
+
+      const countsForDay = countsByDay.get(dayKey);
+      countsForDay.set(bookingType, (countsForDay.get(bookingType) || 0) + 1);
     });
 
-    return counts;
+    return countsByDay;
   }, [items]);
 
   const monthGrid = getMonthGrid(visibleMonth);
@@ -98,19 +106,42 @@ function ScheduleCalendar({ items, onDaySelect, selectedDayKey, title }) {
           }
 
           const dayKey = getDayKey(day);
-          const itemCount = itemCountByDay.get(dayKey) || 0;
+          const dayTypeCounts = Array.from(itemCountsByDay.get(dayKey) || [])
+            .sort((firstEntry, secondEntry) => (
+              allBookingTypeIds.indexOf(firstEntry[0]) - allBookingTypeIds.indexOf(secondEntry[0])
+            ))
+            .map(([typeId, count]) => ({
+              count,
+              meta: getBookingTypeMeta(typeId),
+              typeId
+            }));
+          const dayTypeLabels = dayTypeCounts.map(({ count, meta }) => (
+            `${count} ${meta.label} booking ${count === 1 ? 'item' : 'items'}`
+          ));
+          const hasItems = Boolean(dayTypeCounts.length);
           const isSelected = dayKey === selectedDayKey;
           const isToday = dayKey === todayKey;
 
           return (
             <button
-              className={`calendar-month-day${itemCount ? ' calendar-month-day-has-items' : ''}${isSelected ? ' calendar-month-day-selected' : ''}${isToday ? ' calendar-month-day-today' : ''}`}
+              aria-label={`${formatLongDate(day)}${dayTypeLabels.length ? `, ${dayTypeLabels.join(', ')} booking items` : ', no booking items'}`}
+              className={`calendar-month-day${hasItems ? ' calendar-month-day-has-items' : ''}${isSelected ? ' calendar-month-day-selected' : ''}${isToday ? ' calendar-month-day-today' : ''}`}
               key={dayKey}
               onClick={() => onDaySelect(dayKey)}
               type="button"
             >
               <span className="calendar-day-number">{day.getDate()}</span>
-              <span className="calendar-day-meta">{itemCount ? `${itemCount} event${itemCount > 1 ? 's' : ''}` : ''}</span>
+              <span className="calendar-day-dots" aria-hidden="true">
+                {dayTypeCounts.map(({ count, meta, typeId }) => (
+                  <span
+                    className={`booking-type-count ${meta.colorClass}`}
+                    key={`${dayKey}-${typeId}`}
+                    title={`${count} ${meta.label}`}
+                  >
+                    {count}
+                  </span>
+                ))}
+              </span>
             </button>
           );
         })}

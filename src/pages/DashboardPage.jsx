@@ -1,88 +1,145 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiRequest } from '../api/api';
+import BookingTypeFilter from '../components/BookingTypeFilter';
+import NotificationActions from '../components/NotificationActions';
 import ScheduleCalendar from '../components/ScheduleCalendar';
 import { useSession } from '../context/SessionContext';
 import {
-  buildDateTime,
   formatLongDate,
   formatTimeRange,
   getDayKey,
   groupItemsByDay,
   parseDayKey
 } from '../utils/date';
-
-function mapOwnerAppointmentToEvent(slot) {
-  const bookedName = slot.bookedByName || slot.bookedBy?.name || '';
-  const bookedEmail = slot.bookedByEmail || slot.bookedBy?.email || '';
-
-  return {
-    id: slot._id,
-    title: slot.title,
-    startAt: buildDateTime(slot.date, slot.startTime),
-    endAt: buildDateTime(slot.date, slot.endTime),
-    location: 'Booked appointment',
-    note: slot.description || 'Student reservation confirmed.',
-    withName: bookedName || 'Student',
-    withEmail: bookedEmail
-  };
-}
-
-function mapStudentAppointmentToEvent(slot) {
-  return {
-    id: slot._id,
-    title: slot.title,
-    startAt: buildDateTime(slot.date, slot.startTime),
-    endAt: buildDateTime(slot.date, slot.endTime),
-    location: slot.slotType === 'office-hours' ? 'Office hours' : 'Reserved appointment',
-    note: slot.description || 'Owner reservation confirmed.',
-    withName: slot.owner?.name || 'Owner',
-    withEmail: slot.owner?.email || ''
-  };
-}
+import {
+  allBookingTypeIds,
+  createMailtoAction,
+  isOfficeHoursSlot,
+  mapOwnerAppointmentEvent,
+  mapOwnerCalendarEvent,
+  mapStudentAppointmentEvent
+} from '../utils/bookings';
 
 function DashboardPage() {
 
   const { currentUser } = useSession();
   const isOwner = currentUser.role === 'owner';
   const [selectedDayKey, setSelectedDayKey] = useState('');
+  const [selectedBookingTypeIds, setSelectedBookingTypeIds] = useState(allBookingTypeIds);
   const [events, setEvents] = useState([]);
+  const [calendarEvents, setCalendarEvents] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
+  const [actionFeedback, setActionFeedback] = useState('');
+  const [noticeActions, setNoticeActions] = useState([]);
+  const [cancellingEventId, setCancellingEventId] = useState('');
 
-  useEffect(() => {
-    const loadEvents = async () => {
-      setLoadingEvents(true);
+  const loadEvents = useCallback(async () => {
+    setLoadingEvents(true);
 
-      try {
-        if (isOwner) {
-          const data = await apiRequest('/slots/mine/details');
-          const bookedSlots = data.filter((slot) => slot.isBooked || slot.bookedBy || slot.bookedByName);
-          setEvents(bookedSlots.map(mapOwnerAppointmentToEvent));
-        } else {
-          const data = await apiRequest('/slots/bookings/mine');
-          setEvents(data.map(mapStudentAppointmentToEvent));
-        }
-      } catch (error) {
-        setEvents([]);
-      } finally {
-        setLoadingEvents(false);
+    try {
+      if (isOwner) {
+        const data = await apiRequest('/slots/mine/details');
+        const bookedSlots = data.filter((slot) => slot.isBooked || slot.bookedBy || slot.bookedByName);
+        const ownerCalendarSlots = data.filter((slot) => (
+          slot.isBooked || slot.bookedBy || slot.bookedByName || isOfficeHoursSlot(slot)
+        ));
+
+        setEvents(bookedSlots.map(mapOwnerAppointmentEvent));
+        setCalendarEvents(ownerCalendarSlots.map(mapOwnerCalendarEvent));
+      } else {
+        const data = await apiRequest('/slots/bookings/mine');
+        const studentEvents = data.map(mapStudentAppointmentEvent);
+
+        setEvents(studentEvents);
+        setCalendarEvents(studentEvents);
       }
-    };
-
-    loadEvents();
+    } catch (error) {
+      setEvents([]);
+      setCalendarEvents([]);
+      setActionFeedback(error.message);
+    } finally {
+      setLoadingEvents(false);
+    }
   }, [isOwner]);
 
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
+
+  const selectedBookingTypes = useMemo(() => new Set(selectedBookingTypeIds), [selectedBookingTypeIds]);
+
+  const countsByType = useMemo(() => calendarEvents.reduce((counts, event) => ({
+    ...counts,
+    [event.bookingType]: (counts[event.bookingType] || 0) + 1
+  }), {}), [calendarEvents]);
+
+  const typeFilteredEvents = useMemo(() => (
+    events.filter((event) => selectedBookingTypes.has(event.bookingType))
+  ), [events, selectedBookingTypes]);
+
+  const typeFilteredCalendarEvents = useMemo(() => (
+    calendarEvents.filter((event) => selectedBookingTypes.has(event.bookingType))
+  ), [calendarEvents, selectedBookingTypes]);
+
   const visibleEvents = selectedDayKey
-    ? events.filter((event) => getDayKey(event.startAt) === selectedDayKey)
-    : events;
+    ? typeFilteredEvents.filter((event) => getDayKey(event.startAt) === selectedDayKey)
+    : typeFilteredEvents;
 
   const groupedEvents = groupItemsByDay(visibleEvents);
+  const hasTypeFilters = selectedBookingTypeIds.length > 0;
 
   const eventsHeading = selectedDayKey
     ? `Events on ${formatLongDate(parseDayKey(selectedDayKey))}`
     : isOwner
       ? 'Booked appointments'
       : 'Reserved appointments';
+
+  const handleToggleType = (typeId) => {
+    setSelectedBookingTypeIds((currentTypeIds) => (
+      currentTypeIds.includes(typeId)
+        ? currentTypeIds.filter((currentTypeId) => currentTypeId !== typeId)
+        : [...currentTypeIds, typeId]
+    ));
+  };
+
+  const handleSelectAllTypes = () => {
+    setSelectedBookingTypeIds(allBookingTypeIds);
+  };
+
+  const handleCancelEvent = async (event) => {
+    const shouldCancel = window.confirm(
+      isOwner
+        ? 'Cancel this booking and remove this slot?'
+        : 'Cancel this booking?'
+    );
+
+    if (!shouldCancel) {
+      return;
+    }
+
+    setActionFeedback('');
+    setNoticeActions([]);
+    setCancellingEventId(event.id);
+
+    try {
+      const endpoint = isOwner ? `/slots/${event.id}` : `/slots/${event.id}/cancel-booking`;
+      const method = 'DELETE';
+      const data = await apiRequest(endpoint, method);
+      const notifyAction = createMailtoAction(
+        isOwner ? data.notifyEmail : data.notifyOwnerEmail,
+        isOwner ? 'Email student' : 'Email owner'
+      );
+
+      setNoticeActions(notifyAction ? [notifyAction] : []);
+      setActionFeedback(isOwner ? 'Booking cancelled and slot removed.' : 'Booking cancelled.');
+      await loadEvents();
+    } catch (error) {
+      setActionFeedback(error.message);
+    } finally {
+      setCancellingEventId('');
+    }
+  };
 
   if (loadingEvents) {
     return <div>Loading dashboard...</div>;
@@ -101,16 +158,32 @@ function DashboardPage() {
 
         <p className="dashboard-copy">
           {isOwner
-            ? 'Booked student appointments appear here.'
+            ? 'Booked student appointments appear here. Available OH dates stay visible on the calendar.'
             : 'Your reserved appointments appear here.'}
         </p>
 
       </section>
 
+      <section className="dashboard-card dashboard-filter-card">
+        <div className="dashboard-card-head">
+          <div>
+            <p className="eyebrow">Calendar filter</p>
+            <h2>Booking types</h2>
+          </div>
+        </div>
+
+        <BookingTypeFilter
+          countsByType={countsByType}
+          onSelectAll={handleSelectAllTypes}
+          onToggleType={handleToggleType}
+          selectedTypeIds={selectedBookingTypeIds}
+        />
+      </section>
+
       <div className="dashboard-layout">
 
         <ScheduleCalendar
-          items={events}
+          items={typeFilteredCalendarEvents}
           onDaySelect={setSelectedDayKey}
           selectedDayKey={selectedDayKey}
         />
@@ -136,6 +209,13 @@ function DashboardPage() {
 
           </div>
 
+          {actionFeedback || noticeActions.length ? (
+            <div className="auth-notice">
+              {actionFeedback ? <span>{actionFeedback}</span> : null}
+              <NotificationActions actions={noticeActions} />
+            </div>
+          ) : null}
+
           {groupedEvents.length ? (
 
             <div className="dashboard-event-groups">
@@ -156,7 +236,7 @@ function DashboardPage() {
 
                     {group.items.map((event) => (
                       <article
-                        className="dashboard-event-row"
+                        className={`dashboard-event-row${event.isPast ? ' dashboard-event-row-past' : ''}`}
                         key={event.id}
                       >
 
@@ -174,8 +254,8 @@ function DashboardPage() {
 
                             <h3>{event.title}</h3>
 
-                            <span className="dashboard-badge">
-                              {isOwner ? 'Booked' : 'Reserved'}
+                            <span className={`dashboard-badge${event.isPast ? ' dashboard-badge-muted' : ''}`}>
+                              {event.statusLabel}
                             </span>
 
                           </div>
@@ -205,6 +285,19 @@ function DashboardPage() {
                             </span>
                           )}
 
+                          {event.isPast ? (
+                            <span className="booking-status-text">Completed</span>
+                          ) : (
+                            <button
+                              className="text-link booking-cancel-button"
+                              disabled={cancellingEventId === event.id}
+                              onClick={() => handleCancelEvent(event)}
+                              type="button"
+                            >
+                              {cancellingEventId === event.id ? 'Cancelling' : 'Cancel booking'}
+                            </button>
+                          )}
+
                         </div>
 
                       </article>
@@ -220,16 +313,28 @@ function DashboardPage() {
           ) : (
 
             <div className="dashboard-empty-state">
-              <h3>{isOwner ? 'No booked appointments yet' : 'No bookings yet'}</h3>
+              <h3>
+                {!hasTypeFilters
+                  ? 'No booking types selected'
+                  : isOwner ? 'No booked appointments yet' : 'No bookings yet'}
+              </h3>
               <p>
-                {selectedDayKey
-                  ? 'Choose another day or return to the full list.'
+                {!hasTypeFilters
+                  ? 'Choose at least one booking type to show appointments.'
+                  : selectedDayKey
+                  ? isOwner
+                    ? 'There are no booked appointments on this day. The calendar may still show available OH.'
+                    : 'Choose another day or return to the full list.'
                   : isOwner
                     ? 'New student reservations will appear here.'
                     : 'Reserve an office-hour slot to start building your schedule.'}
               </p>
 
-              {!selectedDayKey && !isOwner ? (
+              {!hasTypeFilters ? (
+                <button className="button button-primary dashboard-card-link" onClick={handleSelectAllTypes} type="button">
+                  Show all types
+                </button>
+              ) : !selectedDayKey && !isOwner ? (
                 <Link className="button button-primary dashboard-card-link" to="/app/owners">
                   Browse owners
                 </Link>

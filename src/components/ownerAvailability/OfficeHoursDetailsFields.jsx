@@ -3,8 +3,8 @@ import { getCustomDateSummary } from './utils';
 
 function getModeCopy(scheduleMode) {
   return scheduleMode === 'recurring'
-    ? 'Use this when the same availability repeats each week.'
-    : 'Use this when availability is offered on one specific date.';
+    ? 'Use this when the same OH repeats each week.'
+    : 'Use this when the OH is offered on one specific date.';
 }
 
 function OfficeHoursDetailsFields({
@@ -17,17 +17,6 @@ function OfficeHoursDetailsFields({
 }) {
   return (
     <div className="calendar-compose-top">
-      <label className="form-field office-hours-title-field">
-        <span>Availability title</span>
-        <input
-          name="title"
-          onChange={(event) => onFieldChange(event.target.name, event.target.value)}
-          placeholder="Add title"
-          type="text"
-          value={officeHoursForm.title}
-        />
-      </label>
-
       <div className="office-hours-mode-toggle" aria-label="Office hour type">
         <button
           className={`office-hours-mode-button${isRecurring ? ' office-hours-mode-button-active' : ''}`}
@@ -49,6 +38,17 @@ function OfficeHoursDetailsFields({
       </div>
 
       <p className="office-hours-mode-copy">{getModeCopy(scheduleMode)}</p>
+
+      <label className="form-field office-hours-title-field">
+        <span>OH title</span>
+        <input
+          name="title"
+          onChange={(event) => onFieldChange(event.target.name, event.target.value)}
+          placeholder="Add title"
+          type="text"
+          value={officeHoursForm.title}
+        />
+      </label>
 
       {isRecurring ? (
         <div className="calendar-series-grid">
