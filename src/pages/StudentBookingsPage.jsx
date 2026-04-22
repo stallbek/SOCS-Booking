@@ -34,7 +34,7 @@ function mapBookingToEvent(slot) {
 
 function StudentBookingsPage() {
   const { currentUser } = useSession();
-  const isStudent = currentUser.role === 'user';
+  const isStudent = currentUser?.role === 'user';
   const [bookings, setBookings] = useState([]);
   const [selectedDayKey, setSelectedDayKey] = useState('');
   const [loadingBookings, setLoadingBookings] = useState(isStudent);

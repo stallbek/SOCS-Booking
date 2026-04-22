@@ -34,7 +34,7 @@ import {
 
 function OwnerAvailabilityPage() {
   const { currentUser } = useSession();
-  const isOwner = currentUser.role === 'owner';
+  const isOwner = currentUser?.role === 'owner';
   const [selectedBookingTypeId, setSelectedBookingTypeId] = useState('type-3');
   const [scheduleMode, setScheduleMode] = useState('recurring');
   const [officeHoursForm, setOfficeHoursForm] = useState(() => createInitialOfficeHoursForm());

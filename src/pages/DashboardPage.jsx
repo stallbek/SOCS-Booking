@@ -1,54 +1,60 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { apiRequest } from '../api/api';
-import BookingTypeFilter from '../components/BookingTypeFilter';
-import NotificationActions from '../components/NotificationActions';
-import ScheduleCalendar from '../components/ScheduleCalendar';
-import { useSession } from '../context/SessionContext';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { apiRequest } from "../api/api";
+import BookingTypeFilter from "../components/BookingTypeFilter";
+import NotificationActions from "../components/NotificationActions";
+import ScheduleCalendar from "../components/ScheduleCalendar";
+import { useSession } from "../context/SessionContext";
 import {
   formatLongDate,
   formatTimeRange,
   getDayKey,
   groupItemsByDay,
-  parseDayKey
-} from '../utils/date';
+  parseDayKey,
+} from "../utils/date";
 import {
   allBookingTypeIds,
   createMailtoAction,
   isOfficeHoursSlot,
   mapOwnerAppointmentEvent,
   mapOwnerCalendarEvent,
-  mapStudentAppointmentEvent
-} from '../utils/bookings';
+  mapStudentAppointmentEvent,
+} from "../utils/bookings";
 
 function DashboardPage() {
-
   const { currentUser } = useSession();
-  const isOwner = currentUser.role === 'owner';
-  const [selectedDayKey, setSelectedDayKey] = useState('');
-  const [selectedBookingTypeIds, setSelectedBookingTypeIds] = useState(allBookingTypeIds);
+  const isOwner = currentUser?.role === "owner";
+  const [selectedDayKey, setSelectedDayKey] = useState("");
+  const [selectedBookingTypeIds, setSelectedBookingTypeIds] =
+    useState(allBookingTypeIds);
   const [events, setEvents] = useState([]);
   const [calendarEvents, setCalendarEvents] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
-  const [actionFeedback, setActionFeedback] = useState('');
+  const [actionFeedback, setActionFeedback] = useState("");
   const [noticeActions, setNoticeActions] = useState([]);
-  const [cancellingEventId, setCancellingEventId] = useState('');
+  const [cancellingEventId, setCancellingEventId] = useState("");
 
   const loadEvents = useCallback(async () => {
     setLoadingEvents(true);
 
     try {
       if (isOwner) {
-        const data = await apiRequest('/slots/mine/details');
-        const bookedSlots = data.filter((slot) => slot.isBooked || slot.bookedBy || slot.bookedByName);
-        const ownerCalendarSlots = data.filter((slot) => (
-          slot.isBooked || slot.bookedBy || slot.bookedByName || isOfficeHoursSlot(slot)
-        ));
+        const data = await apiRequest("/slots/mine/details");
+        const bookedSlots = data.filter(
+          (slot) => slot.isBooked || slot.bookedBy || slot.bookedByName,
+        );
+        const ownerCalendarSlots = data.filter(
+          (slot) =>
+            slot.isBooked ||
+            slot.bookedBy ||
+            slot.bookedByName ||
+            isOfficeHoursSlot(slot),
+        );
 
         setEvents(bookedSlots.map(mapOwnerAppointmentEvent));
         setCalendarEvents(ownerCalendarSlots.map(mapOwnerCalendarEvent));
       } else {
-        const data = await apiRequest('/slots/bookings/mine');
+        const data = await apiRequest("/slots/bookings/mine");
         const studentEvents = data.map(mapStudentAppointmentEvent);
 
         setEvents(studentEvents);
@@ -67,23 +73,40 @@ function DashboardPage() {
     loadEvents();
   }, [loadEvents]);
 
-  const selectedBookingTypes = useMemo(() => new Set(selectedBookingTypeIds), [selectedBookingTypeIds]);
+  const selectedBookingTypes = useMemo(
+    () => new Set(selectedBookingTypeIds),
+    [selectedBookingTypeIds],
+  );
 
-  const countsByType = useMemo(() => calendarEvents.reduce((counts, event) => ({
-    ...counts,
-    [event.bookingType]: (counts[event.bookingType] || 0) + 1
-  }), {}), [calendarEvents]);
+  const countsByType = useMemo(
+    () =>
+      calendarEvents.reduce(
+        (counts, event) => ({
+          ...counts,
+          [event.bookingType]: (counts[event.bookingType] || 0) + 1,
+        }),
+        {},
+      ),
+    [calendarEvents],
+  );
 
-  const typeFilteredEvents = useMemo(() => (
-    events.filter((event) => selectedBookingTypes.has(event.bookingType))
-  ), [events, selectedBookingTypes]);
+  const typeFilteredEvents = useMemo(
+    () => events.filter((event) => selectedBookingTypes.has(event.bookingType)),
+    [events, selectedBookingTypes],
+  );
 
-  const typeFilteredCalendarEvents = useMemo(() => (
-    calendarEvents.filter((event) => selectedBookingTypes.has(event.bookingType))
-  ), [calendarEvents, selectedBookingTypes]);
+  const typeFilteredCalendarEvents = useMemo(
+    () =>
+      calendarEvents.filter((event) =>
+        selectedBookingTypes.has(event.bookingType),
+      ),
+    [calendarEvents, selectedBookingTypes],
+  );
 
   const visibleEvents = selectedDayKey
-    ? typeFilteredEvents.filter((event) => getDayKey(event.startAt) === selectedDayKey)
+    ? typeFilteredEvents.filter(
+        (event) => getDayKey(event.startAt) === selectedDayKey,
+      )
     : typeFilteredEvents;
 
   const groupedEvents = groupItemsByDay(visibleEvents);
@@ -92,15 +115,15 @@ function DashboardPage() {
   const eventsHeading = selectedDayKey
     ? `Events on ${formatLongDate(parseDayKey(selectedDayKey))}`
     : isOwner
-      ? 'Booked appointments'
-      : 'Reserved appointments';
+      ? "Booked appointments"
+      : "Reserved appointments";
 
   const handleToggleType = (typeId) => {
-    setSelectedBookingTypeIds((currentTypeIds) => (
+    setSelectedBookingTypeIds((currentTypeIds) =>
       currentTypeIds.includes(typeId)
         ? currentTypeIds.filter((currentTypeId) => currentTypeId !== typeId)
-        : [...currentTypeIds, typeId]
-    ));
+        : [...currentTypeIds, typeId],
+    );
   };
 
   const handleSelectAllTypes = () => {
@@ -110,36 +133,54 @@ function DashboardPage() {
   const handleCancelEvent = async (event) => {
     const shouldCancel = window.confirm(
       isOwner
-        ? 'Cancel this booking and remove this slot?'
-        : 'Cancel this booking?'
+        ? "Cancel this booking and remove this slot?"
+        : "Cancel this booking?",
     );
 
     if (!shouldCancel) {
       return;
     }
 
-    setActionFeedback('');
+    setActionFeedback("");
     setNoticeActions([]);
     setCancellingEventId(event.id);
 
     try {
-      const endpoint = isOwner ? `/slots/${event.id}` : `/slots/${event.id}/cancel-booking`;
-      const method = 'DELETE';
+      const endpoint = isOwner
+        ? `/slots/${event.id}`
+        : `/slots/${event.id}/cancel-booking`;
+      const method = "DELETE";
       const data = await apiRequest(endpoint, method);
       const notifyAction = createMailtoAction(
         isOwner ? data.notifyEmail : data.notifyOwnerEmail,
-        isOwner ? 'Email student' : 'Email owner'
+        isOwner ? "Email student" : "Email owner",
       );
 
       setNoticeActions(notifyAction ? [notifyAction] : []);
-      setActionFeedback(isOwner ? 'Booking cancelled and slot removed.' : 'Booking cancelled.');
+      setActionFeedback(
+        isOwner ? "Booking cancelled and slot removed." : "Booking cancelled.",
+      );
       await loadEvents();
     } catch (error) {
       setActionFeedback(error.message);
     } finally {
-      setCancellingEventId('');
+      setCancellingEventId("");
     }
   };
+  const [teams, setTeams] = useState([]);
+
+  useEffect(() => {
+    const loadTeams = async () => {
+      try {
+        const data = await apiRequest("/teams");
+        setTeams(Array.isArray(data) ? data : []);
+      } catch {
+        setTeams([]);
+      }
+    };
+
+    loadTeams();
+  }, []);
 
   if (loadingEvents) {
     return <div>Loading dashboard...</div>;
@@ -147,21 +188,18 @@ function DashboardPage() {
 
   return (
     <div className="dashboard-page">
-
       <section className="dashboard-card dashboard-intro-card">
-
         <p className="eyebrow">
-          {isOwner ? 'Owner dashboard' : 'Student dashboard'}
+          {isOwner ? "Owner dashboard" : "Student dashboard"}
         </p>
 
         <h1>{currentUser.name}</h1>
 
         <p className="dashboard-copy">
           {isOwner
-            ? 'Booked student appointments appear here. Available OH dates stay visible on the calendar.'
-            : 'Your reserved appointments appear here.'}
+            ? "Booked student appointments appear here. Available OH dates stay visible on the calendar."
+            : "Your reserved appointments appear here."}
         </p>
-
       </section>
 
       <section className="dashboard-card dashboard-filter-card">
@@ -181,7 +219,6 @@ function DashboardPage() {
       </section>
 
       <div className="dashboard-layout">
-
         <ScheduleCalendar
           items={typeFilteredCalendarEvents}
           onDaySelect={setSelectedDayKey}
@@ -189,9 +226,7 @@ function DashboardPage() {
         />
 
         <section className="dashboard-card events-card">
-
           <div className="dashboard-card-head">
-
             <div>
               <p className="eyebrow">Schedule</p>
               <h2>{eventsHeading}</h2>
@@ -201,12 +236,11 @@ function DashboardPage() {
               <button
                 type="button"
                 className="text-link dashboard-show-all"
-                onClick={() => setSelectedDayKey('')}
+                onClick={() => setSelectedDayKey("")}
               >
                 Show all
               </button>
             ) : null}
-
           </div>
 
           {actionFeedback || noticeActions.length ? (
@@ -217,29 +251,19 @@ function DashboardPage() {
           ) : null}
 
           {groupedEvents.length ? (
-
             <div className="dashboard-event-groups">
-
               {groupedEvents.map((group) => (
-                <div
-                  className="dashboard-event-group"
-                  key={group.dayKey}
-                >
-
+                <div className="dashboard-event-group" key={group.dayKey}>
                   {!selectedDayKey ? (
-                    <h3 className="dashboard-group-label">
-                      {group.label}
-                    </h3>
+                    <h3 className="dashboard-group-label">{group.label}</h3>
                   ) : null}
 
                   <div className="dashboard-event-list">
-
                     {group.items.map((event) => (
                       <article
-                        className={`dashboard-event-row${event.isPast ? ' dashboard-event-row-past' : ''}`}
+                        className={`dashboard-event-row${event.isPast ? " dashboard-event-row-past" : ""}`}
                         key={event.id}
                       >
-
                         <div className="dashboard-event-time">
                           <strong>
                             {formatTimeRange(event.startAt, event.endAt)}
@@ -249,15 +273,14 @@ function DashboardPage() {
                         </div>
 
                         <div className="dashboard-event-main">
-
                           <div className="dashboard-event-head">
-
                             <h3>{event.title}</h3>
 
-                            <span className={`dashboard-badge${event.isPast ? ' dashboard-badge-muted' : ''}`}>
+                            <span
+                              className={`dashboard-badge${event.isPast ? " dashboard-badge-muted" : ""}`}
+                            >
                               {event.statusLabel}
                             </span>
-
                           </div>
 
                           <p>
@@ -267,26 +290,24 @@ function DashboardPage() {
                           </p>
 
                           <p>{event.note}</p>
-
                         </div>
 
                         <div className="dashboard-event-actions">
-
                           {event.withEmail ? (
                             <a
                               className="text-link"
                               href={`mailto:${event.withEmail}`}
                             >
-                              {isOwner ? 'Email student' : 'Email owner'}
+                              {isOwner ? "Email student" : "Email owner"}
                             </a>
                           ) : (
-                            <span className="text-link">
-                              Email unavailable
-                            </span>
+                            <span className="text-link">Email unavailable</span>
                           )}
 
                           {event.isPast ? (
-                            <span className="booking-status-text">Completed</span>
+                            <span className="booking-status-text">
+                              Completed
+                            </span>
                           ) : (
                             <button
                               className="text-link booking-cancel-button"
@@ -294,59 +315,102 @@ function DashboardPage() {
                               onClick={() => handleCancelEvent(event)}
                               type="button"
                             >
-                              {cancellingEventId === event.id ? 'Cancelling' : 'Cancel booking'}
+                              {cancellingEventId === event.id
+                                ? "Cancelling"
+                                : "Cancel booking"}
                             </button>
                           )}
-
                         </div>
-
                       </article>
                     ))}
-
                   </div>
-
                 </div>
               ))}
-
             </div>
-
           ) : (
-
             <div className="dashboard-empty-state">
               <h3>
                 {!hasTypeFilters
-                  ? 'No booking types selected'
-                  : isOwner ? 'No booked appointments yet' : 'No bookings yet'}
+                  ? "No booking types selected"
+                  : isOwner
+                    ? "No booked appointments yet"
+                    : "No bookings yet"}
               </h3>
               <p>
                 {!hasTypeFilters
-                  ? 'Choose at least one booking type to show appointments.'
+                  ? "Choose at least one booking type to show appointments."
                   : selectedDayKey
-                  ? isOwner
-                    ? 'There are no booked appointments on this day. The calendar may still show available OH.'
-                    : 'Choose another day or return to the full list.'
-                  : isOwner
-                    ? 'New student reservations will appear here.'
-                    : 'Reserve an office-hour slot to start building your schedule.'}
+                    ? isOwner
+                      ? "There are no booked appointments on this day. The calendar may still show available OH."
+                      : "Choose another day or return to the full list."
+                    : isOwner
+                      ? "New student reservations will appear here."
+                      : "Reserve an office-hour slot to start building your schedule."}
               </p>
 
               {!hasTypeFilters ? (
-                <button className="button button-primary dashboard-card-link" onClick={handleSelectAllTypes} type="button">
+                <button
+                  className="button button-primary dashboard-card-link"
+                  onClick={handleSelectAllTypes}
+                  type="button"
+                >
                   Show all types
                 </button>
               ) : !selectedDayKey && !isOwner ? (
-                <Link className="button button-primary dashboard-card-link" to="/app/owners">
+                <Link
+                  className="button button-primary dashboard-card-link"
+                  to="/app/owners"
+                >
                   Browse owners
                 </Link>
               ) : null}
             </div>
+          )}     </section>
+        {!isOwner && (
+          <section className="dashboard-card">
+            <div className="dashboard-card-head">
+              <div>
+                <p className="eyebrow">Teams</p>
+                <h2>Your teams</h2>
+              </div>
 
-          )}
+              <Link to="/app/teams" className="text-link">
+                View all
+              </Link>
+            </div>
 
-        </section>
+            {teams.length ? (
+              <div className="dashboard-event-list">
+                {teams.slice(0, 2).map((team) => (
+                  <article className="dashboard-event-row" key={team._id}>
+                    <div className="dashboard-event-main">
+                      <div className="dashboard-event-head">
+                        <h3>{team.teamName}</h3>
+                        <span className="dashboard-badge">
+                          {team.members?.length || 0}/{team.maxMembers}
+                        </span>
+                      </div>
 
+                      <p>{team.courseNumber}</p>
+                      <p>{team.description}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="dashboard-empty-state">
+                <h3>No teams yet</h3>
+                <p>Join or create a team to get started.</p>
+
+                <Link to="/app/teams" className="button button-primary">
+                  Browse teams
+                </Link>
+              </div>
+            )}
+          </section>
+        )}
+    
       </div>
-
     </div>
   );
 }

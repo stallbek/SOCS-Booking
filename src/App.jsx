@@ -6,6 +6,8 @@ import StudentBookingsPage from './pages/StudentBookingsPage';
 import StudentOwnersPage from './pages/StudentOwnersPage';
 import SignedInRoute from './routes/SignedInRoute';
 import WelcomeRoute from './routes/WelcomeRoute';
+import TeamsPage from './pages/TeamsPage';
+import CreateTeamPage from './pages/CreateTeamsPage';
 
 function App() {
   return (
@@ -13,7 +15,7 @@ function App() {
       <Route element={<WelcomeRoute mode={null} />} path="/" />
       <Route element={<WelcomeRoute mode="login" />} path="/login" />
       <Route element={<WelcomeRoute mode="register" />} path="/register" />
-
+    
       <Route element={<SignedInRoute />}>
         <Route element={<DashboardLayout />} path="/app">
           <Route element={<Navigate replace to="/app/dashboard" />} index />
@@ -21,9 +23,11 @@ function App() {
           <Route element={<OwnerAvailabilityPage />} path="availability" />
           <Route element={<StudentOwnersPage />} path="owners" />
           <Route element={<StudentBookingsPage />} path="bookings" />
+          <Route element = {<TeamsPage />} path="teams" />
+          <Route element = {<CreateTeamPage />} path="teams/create" />
         </Route>
       </Route>
-
+ 
       <Route element={<Navigate replace to="/" />} path="*" />
     </Routes>
   );

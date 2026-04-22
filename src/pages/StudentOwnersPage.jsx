@@ -64,7 +64,7 @@ function mapPublicSlotToEvent(slot, currentUserId) {
 function StudentOwnersPage() {
   const { currentUser } = useSession();
   const [searchParams] = useSearchParams();
-  const isStudent = currentUser.role === 'user';
+  const isStudent = currentUser?.role === 'user';
   const [selectedBookingTypeId, setSelectedBookingTypeId] = useState(() => (
     searchParams.get('groupCode') ? 'type-2' : 'type-1'
   ));

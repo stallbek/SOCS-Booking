@@ -14,7 +14,7 @@ function SessionProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-
+    
     //check if user already logged in with cookie session
     const checkSession = async () => {
       try {
