@@ -59,7 +59,7 @@ function MeetingRequestsPanel() {
           <p className="eyebrow">Type 1</p>
           <h2>Meeting requests</h2>
         </div>
-        <span className="availability-form-note">Accept or decline</span>
+        <span className="availability-form-note">Review</span>
       </div>
 
       {feedback || noticeActions.length ? (
@@ -72,12 +72,12 @@ function MeetingRequestsPanel() {
       {loading ? (
         <div className="dashboard-empty-state">
           <h3>Loading requests</h3>
-          <p>Checking student meeting requests.</p>
+          <p>Checking requests.</p>
         </div>
       ) : (
         <MeetingRequestList
           actingRequestId={actingRequestId}
-          emptyCopy="New Type 1 requests from students will appear here."
+          emptyCopy="New requests appear here."
           emptyTitle="No meeting requests"
           onAccept={(requestId) => handleRequestAction(requestId, 'accept')}
           onDecline={(requestId) => handleRequestAction(requestId, 'decline')}

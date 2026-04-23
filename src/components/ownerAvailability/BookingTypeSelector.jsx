@@ -16,11 +16,8 @@ function BookingTypeSelector({
           onClick={() => onSelectBookingType(type.id)}
           type="button"
         >
-          <div className="booking-type-head">
-            <span className="booking-type-label">{type.label}</span>
-          </div>
           <h2>{type.title}</h2>
-          <p>{type.copy}</p>
+          {type.copy ? <p>{type.copy}</p> : null}
         </button>
       ))}
     </section>

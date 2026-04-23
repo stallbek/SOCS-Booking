@@ -5,19 +5,19 @@ export const bookingTypes = [
     id: 'type-1',
     label: 'Type 1',
     title: 'Request meeting',
-    copy: 'Students ask for a meeting time, and owners accept or decline the request.'
+    copy: 'Review requests.'
   },
   {
     id: 'type-2',
     label: 'Type 2',
     title: 'Group meeting',
-    copy: 'Owners collect availability from invited students before choosing the shared time.'
+    copy: 'Group workflow.'
   },
   {
     id: 'type-3',
     label: 'Type 3',
     title: 'Office hours',
-    copy: 'Owners can publish recurring availability or a single-date session for students to reserve.'
+    copy: 'Create slots.'
   }
 ];
 

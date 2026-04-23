@@ -269,9 +269,7 @@ function OwnerAvailabilityPage() {
         <section className="dashboard-card dashboard-intro-card">
           <p className="eyebrow">Availability</p>
           <h1>Owner account required.</h1>
-          <p className="dashboard-copy">
-            Students reserve active slots from owners. Availability management is for McGill owner accounts.
-          </p>
+          <p className="dashboard-copy">Owners only.</p>
         </section>
       </div>
     );
@@ -280,11 +278,9 @@ function OwnerAvailabilityPage() {
   return (
     <div className="dashboard-page availability-page">
       <section className="dashboard-card dashboard-intro-card">
-        <p className="eyebrow">Owner office hours</p>
-        <h1>Create OH.</h1>
-        <p className="dashboard-copy">
-          Choose recurring or single OH, then add the title and time blocks students can reserve.
-        </p>
+        <p className="eyebrow">Availability</p>
+        <h1>Office hours</h1>
+        <p className="dashboard-copy">Create and manage OH.</p>
       </section>
 
       <BookingTypeSelector

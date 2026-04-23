@@ -13,10 +13,8 @@ function BookingTypePlaceholder({ bookingType }) {
       </div>
 
       <div className="dashboard-empty-state booking-type-placeholder">
-        <h3>This workflow is not implemented yet</h3>
-        <p>
-          Keep this button structure for the future Type 2 screen. Type 1 requests and Type 3 office hours are active now.
-        </p>
+        <h3>Not ready yet</h3>
+        <p>Type 2 is still pending.</p>
       </div>
     </section>
   );

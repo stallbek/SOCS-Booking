@@ -28,19 +28,19 @@ const studentBookingTypes = [
     id: 'type-1',
     label: 'Type 1',
     title: 'Request meeting',
-    copy: 'Ask an owner for a specific meeting time and wait for approval.'
+    copy: 'Send a request.'
   },
   {
     id: 'type-2',
     label: 'Type 2',
     title: 'Group meeting',
-    copy: 'Use an invite code and vote for the times that work for you.'
+    copy: 'Vote by code.'
   },
   {
     id: 'type-3',
     label: 'Type 3',
     title: 'Office hours',
-    copy: 'Choose an open OH slot from an owner calendar and reserve it directly.'
+    copy: 'Book a slot.'
   }
 ];
 
@@ -97,7 +97,7 @@ function StudentOwnersPage() {
           return currentValue;
         }
 
-        return nextOwners[0] ? getItemId(nextOwners[0]) : '';
+        return '';
       });
     } catch (error) {
       setFeedback(error.message);
@@ -146,13 +146,13 @@ function StudentOwnersPage() {
   const filteredOwners = useMemo(() => {
     const query = ownerSearch.trim().toLowerCase();
 
+    if (!query) {
+      return [];
+    }
+
     return [...owners]
       .sort((firstOwner, secondOwner) => firstOwner.name.localeCompare(secondOwner.name))
       .filter((owner) => {
-        if (!query) {
-          return true;
-        }
-
         return owner.name.toLowerCase().includes(query) || owner.email.toLowerCase().includes(query);
       });
   }, [ownerSearch, owners]);
@@ -181,6 +181,17 @@ function StudentOwnersPage() {
   const isType3 = selectedBookingTypeId === 'type-3';
   const shouldShowOwnerDirectory = isType1 || isType3;
 
+  const handleOwnerSearchChange = (value) => {
+    setOwnerSearch(value);
+
+    if (!value.trim()) {
+      setSelectedDayKey('');
+      setSelectedOwnerId('');
+      setSelectedOwner(null);
+      setOwnerSlots([]);
+    }
+  };
+
   const handleBookSlot = async (slotId) => {
     setFeedback('');
     setNoticeActions([]);
@@ -207,7 +218,7 @@ function StudentOwnersPage() {
           <p className="eyebrow">Owners</p>
           <h1>Student account required.</h1>
           <p className="dashboard-copy">
-            Student booking is available for McGill student accounts. Owner accounts manage availability from the dashboard.
+            Students book here.
           </p>
         </section>
       </div>
@@ -217,11 +228,7 @@ function StudentOwnersPage() {
   return (
     <div className="dashboard-page student-owners-page">
       <section className="dashboard-card dashboard-intro-card">
-        <p className="eyebrow">Student booking</p>
-        <h1>Choose booking type.</h1>
-        <p className="dashboard-copy">
-          Start with Type 1 requests, Type 2 group voting, or Type 3 office-hour reservations.
-        </p>
+        <h1>Bookings</h1>
       </section>
 
       <BookingTypeSelector
@@ -236,7 +243,7 @@ function StudentOwnersPage() {
           <div className="dashboard-card-head">
             <div>
               <p className="eyebrow">Owners</p>
-              <h2>Choose an owner</h2>
+              <h2>Owner</h2>
             </div>
           </div>
 
@@ -244,7 +251,7 @@ function StudentOwnersPage() {
             <label className="form-field owner-search-field">
               <span>Search owners</span>
               <input
-                onChange={(event) => setOwnerSearch(event.target.value)}
+                onChange={(event) => handleOwnerSearchChange(event.target.value)}
                 placeholder="Search by name"
                 type="search"
                 value={ownerSearch}
@@ -252,7 +259,9 @@ function StudentOwnersPage() {
             </label>
 
             <p className="owner-directory-count">
-              {filteredOwners.length} of {owners.length} owner{owners.length === 1 ? '' : 's'}
+              {ownerSearch.trim()
+                ? `${filteredOwners.length} match${filteredOwners.length === 1 ? '' : 'es'}`
+                : 'Type a name'}
             </p>
           </div>
 
@@ -261,28 +270,33 @@ function StudentOwnersPage() {
               <h3>Loading owners</h3>
               <p>Checking the owner directory.</p>
             </div>
+          ) : !ownerSearch.trim() ? (
+            <div className="dashboard-empty-state">
+              <h3>Search owners</h3>
+              <p>Type a name to begin.</p>
+            </div>
           ) : owners.length ? (
             filteredOwners.length ? (
-            <div className="owner-directory-grid">
-              {filteredOwners.map((owner) => {
-                const ownerId = getItemId(owner);
-                const isSelected = ownerId === selectedOwnerId;
+              <div className="owner-directory-grid">
+                {filteredOwners.map((owner) => {
+                  const ownerId = getItemId(owner);
+                  const isSelected = ownerId === selectedOwnerId;
 
-                return (
-                  <button
-                    aria-pressed={isSelected}
-                    className={`owner-directory-item${isSelected ? ' owner-directory-item-active' : ''}`}
-                    key={ownerId}
-                    onClick={() => setSelectedOwnerId(ownerId)}
-                    type="button"
-                  >
-                    <span className="owner-directory-label">Owner</span>
-                    <strong>{owner.name}</strong>
-                    <span>{owner.email}</span>
-                  </button>
-                );
-              })}
-            </div>
+                  return (
+                    <button
+                      aria-pressed={isSelected}
+                      className={`owner-directory-item${isSelected ? ' owner-directory-item-active' : ''}`}
+                      key={ownerId}
+                      onClick={() => setSelectedOwnerId(ownerId)}
+                      type="button"
+                    >
+                      <span className="owner-directory-label">Owner</span>
+                      <strong>{owner.name}</strong>
+                      <span>{owner.email}</span>
+                    </button>
+                  );
+                })}
+              </div>
             ) : (
               <div className="dashboard-empty-state">
                 <h3>No owners match</h3>
@@ -304,7 +318,7 @@ function StudentOwnersPage() {
       {shouldShowOwnerDirectory && selectedOwner ? (
         <section className="dashboard-card owner-summary-card">
           <div>
-            <p className="eyebrow">Selected owner</p>
+            <p className="eyebrow">Owner</p>
             <h2>{selectedOwner.name}</h2>
             <p className="dashboard-copy">{selectedOwner.email}</p>
           </div>
@@ -404,8 +418,8 @@ function StudentOwnersPage() {
 
                             {event.isBooked ? (
                               event.isMine ? (
-                                <Link className="text-link" to="/app/bookings">
-                                  View booking
+                                <Link className="text-link" to="/app/dashboard">
+                                  View on dashboard
                                 </Link>
                               ) : (
                                 <span className="booking-status-text">Already booked</span>

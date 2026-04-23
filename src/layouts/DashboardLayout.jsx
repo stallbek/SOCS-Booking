@@ -10,8 +10,7 @@ const ownerNavItems = [
 
 const studentNavItems = [
   { label: 'Dashboard', to: '/app/dashboard' },
-  { label: 'Owners', to: '/app/owners' },
-  { label: 'Bookings', to: '/app/bookings' }
+  { label: 'Owners', to: '/app/owners' }
 ];
 
 function DashboardLayout() {

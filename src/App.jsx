@@ -2,7 +2,6 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import DashboardLayout from './layouts/DashboardLayout';
 import DashboardPage from './pages/DashboardPage';
 import OwnerAvailabilityPage from './pages/OwnerAvailabilityPage';
-import StudentBookingsPage from './pages/StudentBookingsPage';
 import StudentOwnersPage from './pages/StudentOwnersPage';
 import SignedInRoute from './routes/SignedInRoute';
 import WelcomeRoute from './routes/WelcomeRoute';
@@ -22,7 +21,6 @@ function App() {
           <Route element={<DashboardPage />} path="dashboard" />
           <Route element={<OwnerAvailabilityPage />} path="availability" />
           <Route element={<StudentOwnersPage />} path="owners" />
-          <Route element={<StudentBookingsPage />} path="bookings" />
           <Route element = {<TeamsPage />} path="teams" />
           <Route element = {<CreateTeamPage />} path="teams/create" />
         </Route>

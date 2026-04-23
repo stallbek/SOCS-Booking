@@ -23,7 +23,8 @@ Current routes:
 - `/app/dashboard`
 - `/app/availability`
 - `/app/owners`
-- `/app/bookings`
+- `/app/teams`
+- `/app/teams/create`
 
 Right now, the frontend still uses a local session rather than backend authentication. Logging in or registering with a McGill email will open the dashboard shell and choose the role from the email domain.
 
@@ -95,7 +96,7 @@ New folders:
 - `src/context/`
   - current local session state
 - `src/pages/`
-  - routed screens such as `LandingPage`, dashboard, availability, owners, and bookings
+  - routed screens such as `LandingPage`, dashboard, availability, owners, and teams
 - `src/components/ownerAvailability/`
   - owner availability form, selector, preview, schedule list, and support helpers
 - `src/utils/`
@@ -167,7 +168,7 @@ The assignment is for a McGill booking application. Keep the language tied to:
 ## Next frontend steps
 
 - Connect login/register to the real backend
-- Add owner and student booking views around the dashboard shell
+- Keep dashboard and owners flows aligned with the backend
 - Wire real data into the dashboard after backend endpoints are ready
 - Add final responsive cleanup after backend pages exist
 
