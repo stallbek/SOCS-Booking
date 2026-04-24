@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { apiRequest } from '../../api/api';
+import { useFeedback } from '../../context/FeedbackContext';
 import { useSession } from '../../context/SessionContext';
 import { buildDateTime, formatLongDate, formatTimeRange, parseDayKey } from '../../utils/date';
+import LookupPanel from './LookupPanel';
 import MeetingVoteOptions from './MeetingVoteOptions';
 import {
   getCurrentUserVoteIds,
@@ -11,24 +13,25 @@ import {
 
 function StudentGroupMeetingPanel() {
   const { currentUser } = useSession();
+  const { notify } = useFeedback();
   const [searchParams] = useSearchParams();
   const [inviteCode, setInviteCode] = useState(() => searchParams.get('groupCode') || '');
   const [group, setGroup] = useState(null);
   const [selectedOptionIds, setSelectedOptionIds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [voting, setVoting] = useState(false);
-  const [feedback, setFeedback] = useState('');
+  const [inlineFeedback, setInlineFeedback] = useState('');
 
   const loadGroupMeeting = async (code = inviteCode) => {
     const nextCode = code.trim();
 
     if (!nextCode) {
-      setFeedback('Enter a group invite code.');
+      setInlineFeedback('Enter a group invite code.');
       return;
     }
 
     setLoading(true);
-    setFeedback('');
+    setInlineFeedback('');
 
     try {
       const data = await apiRequest(`/meetings/group/${nextCode}`);
@@ -37,7 +40,7 @@ function StudentGroupMeetingPanel() {
     } catch (error) {
       setGroup(null);
       setSelectedOptionIds([]);
-      setFeedback(error.message);
+      notify({ message: error.message, tone: 'error' });
     } finally {
       setLoading(false);
     }
@@ -62,17 +65,17 @@ function StudentGroupMeetingPanel() {
 
   const submitVote = async () => {
     if (!group?.inviteCode) {
-      setFeedback('Load a group meeting first.');
+      setInlineFeedback('Load a group meeting first.');
       return;
     }
 
     if (!selectedOptionIds.length) {
-      setFeedback('Choose at least one time option.');
+      setInlineFeedback('Choose at least one time option.');
       return;
     }
 
     setVoting(true);
-    setFeedback('');
+    setInlineFeedback('');
 
     try {
       const data = await apiRequest(`/meetings/group/${group.inviteCode}/vote`, 'PATCH', {
@@ -81,9 +84,9 @@ function StudentGroupMeetingPanel() {
 
       setGroup(data.group);
       setSelectedOptionIds(getCurrentUserVoteIds(data.group, currentUser.id));
-      setFeedback('Vote saved.');
+      notify({ message: 'Vote saved.', tone: 'success' });
     } catch (error) {
-      setFeedback(error.message);
+      notify({ message: error.message, tone: 'error' });
     } finally {
       setVoting(false);
     }
@@ -95,32 +98,20 @@ function StudentGroupMeetingPanel() {
   const selectedEndAt = selectedFinalOption ? buildDateTime(selectedDateKey, selectedFinalOption.endTime) : '';
 
   return (
-    <section className="dashboard-card meeting-request-card">
-      <div className="dashboard-card-head">
-        <div>
-          <p className="eyebrow">Type 2</p>
-          <h2>Join group meeting</h2>
-        </div>
-        <span className="availability-form-note">Invite code</span>
-      </div>
-
-      <div className="group-invite-row">
-        <label className="form-field">
-          <span>Invite code</span>
-          <input
-            onChange={(event) => setInviteCode(event.target.value)}
-            placeholder="Enter code"
-            type="text"
-            value={inviteCode}
-          />
-        </label>
-
-        <button className="button button-primary" disabled={loading} onClick={() => loadGroupMeeting()} type="button">
-          {loading ? 'Loading' : 'Load meeting'}
-        </button>
-      </div>
-
-      {feedback ? <div className="auth-notice">{feedback}</div> : null}
+    <LookupPanel
+      actionDisabled={loading}
+      actionLabel={loading ? 'Loading' : 'Load'}
+      className="group-meeting-card"
+      eyebrow="Join group meetings"
+      fieldLabel="Invite code"
+      heading="Meeting"
+      inputType="text"
+      onAction={() => loadGroupMeeting()}
+      onChange={setInviteCode}
+      placeholder="Enter code"
+      value={inviteCode}
+    >
+      {inlineFeedback ? <div className="inline-feedback inline-feedback-error">{inlineFeedback}</div> : null}
 
       {group ? (
         <div className="group-meeting-panel">
@@ -159,7 +150,7 @@ function StudentGroupMeetingPanel() {
           )}
         </div>
       ) : null}
-    </section>
+    </LookupPanel>
   );
 }
 

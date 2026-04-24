@@ -1,3 +1,4 @@
+import BookingTypeButton from './BookingTypeButton';
 import { bookingTypeOptions } from '../utils/bookings';
 
 function BookingTypeFilter({ countsByType, onSelectAll, onToggleType, selectedTypeIds }) {
@@ -11,17 +12,15 @@ function BookingTypeFilter({ countsByType, onSelectAll, onToggleType, selectedTy
           const count = countsByType?.[option.id] || 0;
 
           return (
-            <button
-              aria-pressed={isSelected}
-              className={`booking-type-filter-button${isSelected ? ' booking-type-filter-button-active' : ''}`}
+            <BookingTypeButton
+              active={isSelected}
+              colorClass={option.colorClass}
+              count={count}
               key={option.id}
               onClick={() => onToggleType(option.id)}
-              type="button"
-            >
-              <span className={`booking-type-dot ${option.colorClass}`}></span>
-              <span>{option.label}</span>
-              <strong>{count}</strong>
-            </button>
+              title={option.filterLabel || option.title}
+              variant="filter"
+            />
           );
         })}
       </div>

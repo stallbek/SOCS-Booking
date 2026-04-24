@@ -4,18 +4,21 @@ export const bookingTypeOptions = [
   {
     id: 'type-1',
     label: 'Type 1',
+    filterLabel: 'Meeting',
     title: 'Request meeting',
     colorClass: 'booking-type-dot-type-1'
   },
   {
     id: 'type-2',
     label: 'Type 2',
+    filterLabel: 'Group Meeting',
     title: 'Group meeting',
     colorClass: 'booking-type-dot-type-2'
   },
   {
     id: 'type-3',
     label: 'Type 3',
+    filterLabel: 'Office Hour',
     title: 'Office hours',
     colorClass: 'booking-type-dot-type-3'
   }
@@ -82,14 +85,12 @@ export function getStudentSlotState(slot, currentUserId, now = new Date()) {
   const isBooked = Boolean(bookedById);
   const isMine = Boolean(bookedById && String(bookedById) === String(currentUserId));
   const isPast = hasSlotStarted(slot, now);
-  const isBookable = !isBooked && !isPast;
 
   if (isMine) {
     return {
       isBooked,
       isMine,
       isPast,
-      isBookable,
       statusLabel: isPast ? 'Completed' : 'Reserved',
       note: isPast ? 'You reserved this past slot.' : 'You already reserved this slot.'
     };
@@ -100,7 +101,6 @@ export function getStudentSlotState(slot, currentUserId, now = new Date()) {
       isBooked,
       isMine,
       isPast,
-      isBookable,
       statusLabel: isPast ? 'Completed' : 'Booked',
       note: isPast ? 'This reserved slot has passed.' : 'This slot is already reserved.'
     };
@@ -111,7 +111,6 @@ export function getStudentSlotState(slot, currentUserId, now = new Date()) {
       isBooked,
       isMine,
       isPast,
-      isBookable,
       statusLabel: 'Past',
       note: 'This slot has passed.'
     };
@@ -121,7 +120,6 @@ export function getStudentSlotState(slot, currentUserId, now = new Date()) {
     isBooked,
     isMine,
     isPast,
-    isBookable,
     statusLabel: 'Open',
     note: 'Open for booking.'
   };
@@ -174,7 +172,6 @@ export function mapOwnerAppointmentEvent(slot) {
   return {
     id: slot._id,
     bookingType,
-    bookingTypeLabel: bookingTypeMeta.label,
     title: slot.title,
     startAt,
     endAt,
@@ -196,7 +193,6 @@ export function mapOwnerCalendarEvent(slot) {
   return {
     id: slot._id,
     bookingType,
-    bookingTypeLabel: bookingTypeMeta.label,
     title: slot.title,
     startAt,
     endAt,
@@ -216,7 +212,6 @@ export function mapStudentAppointmentEvent(slot) {
   return {
     id: slot._id,
     bookingType,
-    bookingTypeLabel: bookingTypeMeta.label,
     title: slot.title,
     startAt,
     endAt,

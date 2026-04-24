@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { apiRequest } from '../api/api';
+import PageHeader from '../components/PageHeader';
 
 function CreateTeamPage() {
   const [form, setForm] = useState({
@@ -47,19 +48,13 @@ function CreateTeamPage() {
 
   return (
     <div className="dashboard-page">
+      <PageHeader
+        description="Create a team request and let others join."
+        eyebrow="Create team"
+        title="Start a new team"
+      />
 
-      {/* Intro */}
-      <section className="dashboard-card dashboard-intro-card">
-        <p className="eyebrow">Create team</p>
-        <h1>Start a new team</h1>
-        <p className="dashboard-copy">
-          Create a team request and let others join.
-        </p>
-      </section>
-
-      {/* Form */}
       <section className="dashboard-card">
-
         <div className="dashboard-card-head">
           <div>
             <p className="eyebrow">Team details</p>

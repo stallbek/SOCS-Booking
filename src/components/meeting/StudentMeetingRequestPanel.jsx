@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { apiRequest } from '../../api/api';
+import { useFeedback } from '../../context/FeedbackContext';
 import { getItemId } from '../../utils/bookings';
-import NotificationActions from '../NotificationActions';
 import MeetingDetailsFields from './MeetingDetailsFields';
 import {
   buildMeetingRequestPayload,
@@ -11,9 +11,9 @@ import {
 } from './utils';
 
 function StudentMeetingRequestPanel({ selectedOwner }) {
+  const { notify } = useFeedback();
   const [form, setForm] = useState(() => createInitialMeetingRequestForm());
-  const [feedback, setFeedback] = useState('');
-  const [noticeActions, setNoticeActions] = useState([]);
+  const [validationMessage, setValidationMessage] = useState('');
   const [saving, setSaving] = useState(false);
   const ownerHeading = selectedOwner ? `With ${selectedOwner.name}` : 'With owner';
 
@@ -26,20 +26,19 @@ function StudentMeetingRequestPanel({ selectedOwner }) {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setFeedback('');
-    setNoticeActions([]);
+    setValidationMessage('');
 
     const selectedOwnerId = getItemId(selectedOwner);
 
     if (!selectedOwnerId) {
-      setFeedback('Choose an owner first.');
+      setValidationMessage('Choose an owner first.');
       return;
     }
 
-    const validationMessage = getMeetingRequestValidationMessage(form);
+    const nextValidationMessage = getMeetingRequestValidationMessage(form);
 
-    if (validationMessage) {
-      setFeedback(validationMessage);
+    if (nextValidationMessage) {
+      setValidationMessage(nextValidationMessage);
       return;
     }
 
@@ -53,14 +52,17 @@ function StudentMeetingRequestPanel({ selectedOwner }) {
       );
       const notifyAction = createEmailAction(data.notifyEmail, 'Email owner', 'Meeting request sent');
 
-      setNoticeActions(notifyAction ? [notifyAction] : []);
-      setFeedback('Meeting request sent.');
+      notify({
+        actions: notifyAction ? [notifyAction] : [],
+        message: 'Meeting request sent.',
+        tone: 'success'
+      });
       setForm((currentValues) => ({
         ...currentValues,
         message: ''
       }));
     } catch (error) {
-      setFeedback(error.message);
+      notify({ message: error.message, tone: 'error' });
     } finally {
       setSaving(false);
     }
@@ -88,11 +90,8 @@ function StudentMeetingRequestPanel({ selectedOwner }) {
         />
 
         <div className="office-hours-footer">
-          {feedback || noticeActions.length ? (
-            <div className="auth-notice">
-              {feedback ? <span>{feedback}</span> : null}
-              <NotificationActions actions={noticeActions} />
-            </div>
+          {validationMessage ? (
+            <div className="inline-feedback inline-feedback-error">{validationMessage}</div>
           ) : null}
 
           <button className="button button-primary availability-submit" disabled={saving || !selectedOwner} type="submit">

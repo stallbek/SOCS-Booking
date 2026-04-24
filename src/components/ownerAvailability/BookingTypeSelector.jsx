@@ -1,3 +1,4 @@
+import BookingTypeButton from '../BookingTypeButton';
 import { bookingTypes } from './constants';
 
 function BookingTypeSelector({
@@ -9,16 +10,13 @@ function BookingTypeSelector({
   return (
     <section className="booking-type-grid" aria-label={label}>
       {bookingTypeOptions.map((type) => (
-        <button
-          aria-pressed={type.id === selectedBookingTypeId}
-          className={`booking-type-card${type.id === selectedBookingTypeId ? ' booking-type-card-active' : ''}`}
+        <BookingTypeButton
+          active={type.id === selectedBookingTypeId}
+          description={type.copy}
           key={type.id}
           onClick={() => onSelectBookingType(type.id)}
-          type="button"
-        >
-          <h2>{type.title}</h2>
-          {type.copy ? <p>{type.copy}</p> : null}
-        </button>
+          title={type.title}
+        />
       ))}
     </section>
   );

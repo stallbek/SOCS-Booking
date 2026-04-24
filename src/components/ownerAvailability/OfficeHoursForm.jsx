@@ -65,7 +65,7 @@ function OfficeHoursForm({
         </div>
 
         <div className="office-hours-footer">
-          {feedback ? <div className="auth-notice">{feedback}</div> : null}
+          {feedback ? <div className="inline-feedback inline-feedback-error">{feedback}</div> : null}
 
           <button className="button button-primary availability-submit" disabled={saving} type="submit">
             {submitLabel}

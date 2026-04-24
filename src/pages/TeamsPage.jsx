@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { apiRequest } from '../api/api';
+import PageHeader from '../components/PageHeader';
 import { useSession } from '../context/SessionContext';
 import { Link } from 'react-router-dom';
 
@@ -64,19 +65,13 @@ function TeamsPage() {
 
   return (
     <div className="dashboard-page">
+      <PageHeader
+        description="Browse open project teams and join ongoing work."
+        eyebrow="Team Finder"
+        title="Find or join a team"
+      />
 
-      {/* Intro (same style as Dashboard) */}
-      <section className="dashboard-card dashboard-intro-card">
-        <p className="eyebrow">Team Finder</p>
-        <h1>Find or join a team</h1>
-        <p className="dashboard-copy">
-          Browse open project teams and join ongoing work.
-        </p>
-      </section>
-
-      {/* Main card */}
       <section className="dashboard-card">
-
         <div className="dashboard-card-head">
           <div>
             <p className="eyebrow">Teams</p>
@@ -118,10 +113,7 @@ function TeamsPage() {
                   <p><strong>{team.subtitle}</strong></p>
                   <p>{team.description}</p>
                   <p>Skills: {team.skills}</p>
-
                 </div>
-
-                {/* ACTIONS */}
                 <div className="dashboard-event-actions">
                   <button
                     className="text-link"
