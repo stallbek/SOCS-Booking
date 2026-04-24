@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import AccountPanel from '../components/AccountPanel';
 import BrandLink from '../components/BrandLink';
 import HeroCalendar from '../components/HeroCalendar';
+import OutlineButton from '../components/OutlineButton';
 
 //Stalbek Ulanbek uulu 261102435
 
@@ -57,9 +58,7 @@ function LandingPage({ authMode }) {
           </nav>
 
           <div className="header-actions">
-            <Link className="button button-muted" to="/login">
-              Log in
-            </Link>
+            <OutlineButton to="/login">Log in</OutlineButton>
             <Link className="button button-primary" to="/register">
               Register
             </Link>
@@ -145,9 +144,7 @@ function LandingPage({ authMode }) {
           </div>
 
           <div className="footer-actions">
-            <Link className="button button-muted" to="/login">
-              Log in
-            </Link>
+            <OutlineButton to="/login">Log in</OutlineButton>
             <Link className="button button-primary" to="/register">
               Register
             </Link>

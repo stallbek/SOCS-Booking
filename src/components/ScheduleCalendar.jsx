@@ -1,5 +1,6 @@
 //Stalbek Ulanbek uulu 261102435
 import { useEffect, useMemo, useState } from 'react';
+import OutlineButton from './OutlineButton';
 import { formatLongDate, formatMonthLabel, getDayKey, parseDayKey } from '../utils/date';
 import { allBookingTypeIds, getBookingTypeMeta } from '../utils/bookings';
 
@@ -85,12 +86,12 @@ function ScheduleCalendar({ items, onDaySelect, selectedDayKey, title }) {
         </div>
 
         <div className="calendar-controls">
-          <button className="calendar-control" onClick={showPreviousMonth} type="button">
+          <OutlineButton className="calendar-control" onClick={showPreviousMonth}>
             Prev
-          </button>
-          <button className="calendar-control" onClick={showNextMonth} type="button">
+          </OutlineButton>
+          <OutlineButton className="calendar-control" onClick={showNextMonth}>
             Next
-          </button>
+          </OutlineButton>
         </div>
       </div>
 

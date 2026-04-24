@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import BrandLink from '../components/BrandLink';
+import OutlineButton from '../components/OutlineButton';
 import { useSession } from '../context/SessionContext';
 
 const ownerNavItems = [
@@ -50,9 +51,9 @@ function DashboardLayout() {
             <strong>{currentUser.name}</strong>
           </div>
 
-          <button className="button button-muted app-logout" onClick={handleLogout} type="button">
+          <OutlineButton className="app-logout" onClick={handleLogout}>
             Log out
-          </button>
+          </OutlineButton>
         </div>
       </header>
 
