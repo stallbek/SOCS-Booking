@@ -29,7 +29,7 @@ function OfficeHoursForm({
     <section className="dashboard-card availability-form-card">
       <div className="dashboard-card-head">
         <div>
-          <p className="eyebrow">Type 3</p>
+          <p className="eyebrow">Office Hours</p>
           <h2>{heading}</h2>
         </div>
         <span className="availability-form-note">Active when created</span>

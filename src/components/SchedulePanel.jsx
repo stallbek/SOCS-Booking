@@ -1,4 +1,5 @@
 //Stalbek Ulanbek uulu 261102435
+import OutlineButton from './OutlineButton';
 import { formatTimeRange } from '../utils/date';
 
 function SchedulePanel({
@@ -98,13 +99,12 @@ function SchedulePanel({
           </div>
 
           {showOverflowToggle && onToggleExpanded ? (
-            <button
-              className="button button-muted schedule-more-button"
+            <OutlineButton
+              className="schedule-more-button"
               onClick={onToggleExpanded}
-              type="button"
             >
               {showOverflowToggleLabel}
-            </button>
+            </OutlineButton>
           ) : null}
         </>
       ) : (
