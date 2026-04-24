@@ -22,6 +22,8 @@ import {
   mapStudentAppointmentEvent,
 } from "../utils/bookings";
 
+//Stalbek Ulanbek uulu 261102435
+
 function DashboardPage() {
   const { currentUser } = useSession();
   const { confirm, notify } = useFeedback();
@@ -120,11 +122,11 @@ function DashboardPage() {
 
   const visibleEvents = selectedDayKey
     ? typeFilteredEvents.filter(
-        (event) => getDayKey(event.startAt) === selectedDayKey,
-      )
+      (event) => getDayKey(event.startAt) === selectedDayKey,
+    )
     : upcomingEvents.filter((event) =>
-        selectedBookingTypes.has(event.bookingType),
-      );
+      selectedBookingTypes.has(event.bookingType),
+    );
 
   const groupedEvents = groupItemsByDay(visibleEvents);
   const hasTypeFilters = selectedBookingTypeIds.length > 0;
@@ -267,8 +269,8 @@ function DashboardPage() {
     const resizeObserver = typeof ResizeObserver === "undefined"
       ? null
       : new ResizeObserver(() => {
-          updateScheduleHeight();
-        });
+        updateScheduleHeight();
+      });
 
     if (resizeObserver) {
       if (primaryColumnRef.current) {

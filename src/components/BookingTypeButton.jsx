@@ -1,3 +1,5 @@
+//Stalbek Ulanbek uulu 261102435
+
 function BookingTypeButton({
   active = false,
   colorClass = '',

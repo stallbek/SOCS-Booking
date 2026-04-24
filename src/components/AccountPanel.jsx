@@ -1,3 +1,4 @@
+//Stalbek Ulanbek uulu 261102435
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSession } from '../context/SessionContext';
@@ -26,66 +27,66 @@ function AccountPanel({ mode }) {
     }));
   };
 
-const handleSubmit = async (event) => {
+  const handleSubmit = async (event) => {
 
-  //stop page refresh from form submit
-  event.preventDefault();
+    //stop page refresh from form submit
+    event.preventDefault();
 
-  //clear old feedback message
-  setFeedback('');
+    //clear old feedback message
+    setFeedback('');
 
-  //for register user must enter a name
-  if (isRegister && !formValues.name.trim()) {
-    setFeedback('Enter your name before creating the account.');
-    return;
-  }
+    //for register user must enter a name
+    if (isRegister && !formValues.name.trim()) {
+      setFeedback('Enter your name before creating the account.');
+      return;
+    }
 
-  //email is required
-  if (!formValues.email.trim()) {
-    setFeedback('Enter your McGill email address.');
-    return;
-  }
+    //email is required
+    if (!formValues.email.trim()) {
+      setFeedback('Enter your McGill email address.');
+      return;
+    }
 
-  //password is required
-  if (!formValues.password.trim()) {
-    setFeedback('Enter your password.');
-    return;
-  }
+    //password is required
+    if (!formValues.password.trim()) {
+      setFeedback('Enter your password.');
+      return;
+    }
 
-  //during register both passwords must match
-  if (isRegister && formValues.password !== formValues.confirmPassword) {
-    setFeedback('Passwords do not match.');
-    return;
-  }
+    //during register both passwords must match
+    if (isRegister && formValues.password !== formValues.confirmPassword) {
+      setFeedback('Passwords do not match.');
+      return;
+    }
 
-  let result;
+    let result;
 
-  //if user is creating account call register
-  if (isRegister) {
-    result = await register({
-      name: formValues.name,
-      email: formValues.email,
-      password: formValues.password,
-      confirmPassword: formValues.confirmPassword
-    });
-  }
-  else {
-    //otherwise call login
-    result = await login({
-      email: formValues.email,
-      password: formValues.password
-    });
-  }
+    //if user is creating account call register
+    if (isRegister) {
+      result = await register({
+        name: formValues.name,
+        email: formValues.email,
+        password: formValues.password,
+        confirmPassword: formValues.confirmPassword
+      });
+    }
+    else {
+      //otherwise call login
+      result = await login({
+        email: formValues.email,
+        password: formValues.password
+      });
+    }
 
-  //if login/register failed show error
-  if (!result.success) {
-    setFeedback(result.message);
-    return;
-  }
+    //if login/register failed show error
+    if (!result.success) {
+      setFeedback(result.message);
+      return;
+    }
 
-  //if successful go to redirect page
-  navigate(redirectTo, { replace: true });
-};
+    //if successful go to redirect page
+    navigate(redirectTo, { replace: true });
+  };
 
 
   return (

@@ -1,3 +1,4 @@
+//Stalbek Ulanbek uulu 261102435
 import { useEffect, useState } from 'react';
 
 const calendarWeekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -85,9 +86,9 @@ function HeroCalendar() {
   const crossedCount = reduceMotion
     ? 0
     : Math.max(
-        0,
-        Math.min(currentCalendarDays.length, Math.floor((pageTime - CROSS_START_MS) / CROSS_INTERVAL_MS) + 1)
-      );
+      0,
+      Math.min(currentCalendarDays.length, Math.floor((pageTime - CROSS_START_MS) / CROSS_INTERVAL_MS) + 1)
+    );
 
   const currentPageDuration = calendarPageDurations[currentPageIndex];
   let sheetOpacity = 1;

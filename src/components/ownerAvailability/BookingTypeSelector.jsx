@@ -1,3 +1,5 @@
+//Stalbek Ulanbek uulu 261102435
+
 import BookingTypeButton from '../BookingTypeButton';
 import { bookingTypes } from './constants';
 

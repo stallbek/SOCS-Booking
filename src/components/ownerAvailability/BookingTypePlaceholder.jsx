@@ -1,3 +1,5 @@
+//Stalbek Ulanbek uulu 261102435
+
 function BookingTypePlaceholder({ bookingType }) {
   return (
     <section className="dashboard-card booking-type-panel">

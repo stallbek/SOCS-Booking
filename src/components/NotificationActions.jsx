@@ -1,3 +1,5 @@
+//Stalbek Ulanbek uulu 261102435
+
 function NotificationActions({ actions = [] }) {
   const visibleActions = (Array.isArray(actions) ? actions : [actions]).filter(Boolean);
 

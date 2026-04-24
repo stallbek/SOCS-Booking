@@ -13,6 +13,8 @@ const studentNavItems = [
   { label: 'Owners', to: '/app/owners' }
 ];
 
+//Stalbek Ulanbek uulu 261102435
+
 function DashboardLayout() {
   const navigate = useNavigate();
   const { currentUser, logout } = useSession();

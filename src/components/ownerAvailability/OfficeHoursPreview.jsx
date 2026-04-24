@@ -1,3 +1,5 @@
+//Stalbek Ulanbek uulu 261102435
+
 import { getPreviewLabel, getTimeOptionKey } from './utils';
 
 function OfficeHoursPreview({

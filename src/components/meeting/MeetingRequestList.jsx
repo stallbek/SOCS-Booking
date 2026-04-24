@@ -1,3 +1,5 @@
+//Stalbek Ulanbek uulu 261102435
+
 import { buildDateTime, formatLongDate, formatTimeRange, getDatePart, parseDayKey } from '../../utils/date';
 import {
   getRequestId,

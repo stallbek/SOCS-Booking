@@ -6,6 +6,8 @@ import { FeedbackProvider } from './context/FeedbackContext';
 import { SessionProvider } from './context/SessionContext';
 import './styles.css';
 
+//Stalbek Ulanbek uulu 261102435
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <SessionProvider>

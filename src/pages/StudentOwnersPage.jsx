@@ -43,6 +43,8 @@ const studentBookingTypes = [
   }
 ];
 
+//Stalbek Ulanbek uulu 261102435
+
 function mapPublicSlotToEvent(slot, currentUserId) {
   const { startAt, endAt } = getSlotDateTimes(slot);
   const slotState = getStudentSlotState(slot, currentUserId);
@@ -88,7 +90,7 @@ function StudentOwnersPage() {
       return;
     }
 
-      setLoadingOwners(true);
+    setLoadingOwners(true);
 
     try {
       const data = await apiRequest('/slots/public/owners');
@@ -155,8 +157,8 @@ function StudentOwnersPage() {
     }
 
     return sortedOwners.filter((owner) => {
-        return owner.name.toLowerCase().includes(query) || owner.email.toLowerCase().includes(query);
-      });
+      return owner.name.toLowerCase().includes(query) || owner.email.toLowerCase().includes(query);
+    });
   }, [ownerSearch, owners]);
 
   const events = useMemo(
@@ -237,8 +239,8 @@ function StudentOwnersPage() {
     const resizeObserver = typeof ResizeObserver === 'undefined'
       ? null
       : new ResizeObserver(() => {
-          updateScheduleHeight();
-        });
+        updateScheduleHeight();
+      });
 
     if (resizeObserver) {
       if (calendarCardRef.current) {

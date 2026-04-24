@@ -1,5 +1,7 @@
 import { buildDateTime } from './date';
 
+//Stalbek Ulanbek uulu 261102435
+
 export const bookingTypeOptions = [
   {
     id: 'type-1',

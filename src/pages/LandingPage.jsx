@@ -3,6 +3,8 @@ import AccountPanel from '../components/AccountPanel';
 import BrandLink from '../components/BrandLink';
 import HeroCalendar from '../components/HeroCalendar';
 
+//Stalbek Ulanbek uulu 261102435
+
 const productName = 'SOCS Booking';
 
 const workflow = [

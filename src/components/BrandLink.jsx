@@ -1,3 +1,4 @@
+//Stalbek Ulanbek uulu 261102435
 import { Link } from 'react-router-dom';
 import mcgillLogo from '../assets/mcgill-university-1.svg';
 

@@ -1,3 +1,5 @@
+//Stalbek Ulanbek uulu 261102435
+
 import { formatLongDate, parseDayKey } from '../../utils/date';
 import { weekdayOptions } from './constants';
 import { getCustomDateSummary, getTimeOptionKey } from './utils';

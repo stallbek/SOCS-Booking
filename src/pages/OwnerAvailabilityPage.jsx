@@ -42,6 +42,8 @@ import {
   sortTimeOptions
 } from '../components/ownerAvailability/utils';
 
+//Stalbek Ulanbek uulu 261102435
+
 function OwnerAvailabilityPage() {
   const { currentUser } = useSession();
   const { confirm, notify } = useFeedback();
@@ -250,8 +252,8 @@ function OwnerAvailabilityPage() {
     const resizeObserver = typeof ResizeObserver === 'undefined'
       ? null
       : new ResizeObserver(() => {
-          updateScheduleHeight();
-        });
+        updateScheduleHeight();
+      });
 
     if (resizeObserver) {
       if (calendarCardRef.current) {

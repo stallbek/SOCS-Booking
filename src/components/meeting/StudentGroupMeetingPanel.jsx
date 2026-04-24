@@ -1,3 +1,5 @@
+//Stalbek Ulanbek uulu 261102435
+
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { apiRequest } from '../../api/api';

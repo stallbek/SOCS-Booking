@@ -1,3 +1,4 @@
+//Stalbek Ulanbek uulu 261102435
 import { formatTimeRange } from '../utils/date';
 
 function SchedulePanel({

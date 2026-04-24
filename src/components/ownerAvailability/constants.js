@@ -5,19 +5,19 @@ export const bookingTypes = [
     id: 'type-1',
     label: 'Type 1',
     title: 'Request meeting',
-    copy: 'Review requests.'
+    copy: 'Review incoming requests'
   },
   {
     id: 'type-2',
     label: 'Type 2',
     title: 'Group meeting',
-    copy: 'Group workflow.'
+    copy: 'Create group meetings slots'
   },
   {
     id: 'type-3',
     label: 'Type 3',
     title: 'Office hours',
-    copy: 'Create slots.'
+    copy: 'Create office hours'
   }
 ];
 

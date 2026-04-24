@@ -11,8 +11,8 @@ function MeetingRequestsPanel({
     <section className="dashboard-card availability-form-card booking-type-panel">
       <div className="dashboard-card-head">
         <div>
-          <p className="eyebrow">Type 1</p>
-          <h2>Meeting requests</h2>
+          <p className="eyebrow">Meeting requests</p>
+          <h2>Manage requests</h2>
         </div>
         <span className="availability-form-note">Review</span>
       </div>
