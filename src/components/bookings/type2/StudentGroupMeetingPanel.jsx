@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { apiRequest } from '../../api/api';
-import { useFeedback } from '../../context/FeedbackContext';
-import { useSession } from '../../context/SessionContext';
-import { buildDateTime, formatLongDate, formatTimeRange, parseDayKey } from '../../utils/date';
-import LookupPanel from './LookupPanel';
+import { apiRequest } from '../../../api/api';
+import { useFeedback } from '../../../context/FeedbackContext';
+import { useSession } from '../../../context/SessionContext';
+import { buildDateTime, formatLongDate, formatTimeRange, parseDayKey } from '../../../utils/date';
+import LookupPanel from '../shared/LookupPanel';
 import MeetingVoteOptions from './MeetingVoteOptions';
 import {
   getCurrentUserVoteIds,
   getGroupOptionDateKey
-} from './utils';
+} from './voteUtils';
+import { getSelectedGroupOptionId } from './groupMeetingUtils';
 
 function StudentGroupMeetingPanel() {
   const { currentUser } = useSession();
@@ -98,6 +99,7 @@ function StudentGroupMeetingPanel() {
   const selectedDateKey = selectedFinalOption ? getGroupOptionDateKey(selectedFinalOption) : '';
   const selectedStartAt = selectedFinalOption ? buildDateTime(selectedDateKey, selectedFinalOption.startTime) : '';
   const selectedEndAt = selectedFinalOption ? buildDateTime(selectedDateKey, selectedFinalOption.endTime) : '';
+  const selectedFinalOptionId = getSelectedGroupOptionId(group);
 
   return (
     <LookupPanel
@@ -125,12 +127,20 @@ function StudentGroupMeetingPanel() {
           </div>
 
           {group.status === 'finalized' && selectedFinalOption ? (
-            <div className="dashboard-empty-state">
-              <h3>Final time selected</h3>
-              <p>
-                {formatLongDate(parseDayKey(selectedDateKey))}, {formatTimeRange(selectedStartAt, selectedEndAt)}
-              </p>
-            </div>
+            <>
+              <div className="dashboard-empty-state">
+                <h3>Final time selected</h3>
+                <p>
+                  {formatLongDate(parseDayKey(selectedDateKey))}, {formatTimeRange(selectedStartAt, selectedEndAt)}
+                </p>
+              </div>
+
+              <MeetingVoteOptions
+                highlightedOptionId={selectedFinalOptionId}
+                options={group.timeOptions || []}
+                readOnly
+              />
+            </>
           ) : (
             <>
               <MeetingVoteOptions
@@ -141,11 +151,11 @@ function StudentGroupMeetingPanel() {
 
               <div className="office-hours-footer">
                 <p className="office-hours-top-copy">
-                  Select every time that works for you. The owner chooses the final meeting time.
+                  Select every time that works for you, then confirm your vote.
                 </p>
 
                 <button className="button button-primary availability-submit" disabled={voting} onClick={submitVote} type="button">
-                  {voting ? 'Saving' : 'Save vote'}
+                  {voting ? 'Saving' : 'Confirm choices'}
                 </button>
               </div>
             </>

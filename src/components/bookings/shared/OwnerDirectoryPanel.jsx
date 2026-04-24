@@ -1,7 +1,7 @@
 
 //Stalbek Ulanbek uulu 261102435
 import LookupPanel from './LookupPanel';
-import { getItemId } from '../../utils/bookings';
+import { getItemId } from '../../../utils/bookings';
 
 function OwnerDirectoryPanel({
   filteredOwners,

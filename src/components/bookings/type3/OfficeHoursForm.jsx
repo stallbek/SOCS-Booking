@@ -32,7 +32,6 @@ function OfficeHoursForm({
           <p className="eyebrow">Office Hours</p>
           <h2>{heading}</h2>
         </div>
-        <span className="availability-form-note">Active when created</span>
       </div>
 
       <form className="office-hours-compose" onSubmit={onSubmit}>

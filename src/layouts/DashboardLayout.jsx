@@ -6,12 +6,12 @@ import { useSession } from '../context/SessionContext';
 const ownerNavItems = [
   { label: 'Dashboard', to: '/app/dashboard' },
   { label: 'Availability', to: '/app/availability' },
-  { label: 'Invitations' }
+  { label: 'Bookings', to: '/app/owners' }
 ];
 
 const studentNavItems = [
   { label: 'Dashboard', to: '/app/dashboard' },
-  { label: 'Owners', to: '/app/owners' }
+  { label: 'Bookings', to: '/app/owners' }
 ];
 
 //Stalbek Ulanbek uulu 261102435

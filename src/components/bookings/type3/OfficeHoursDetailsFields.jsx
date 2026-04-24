@@ -1,6 +1,6 @@
 //Stalbek Ulanbek uulu 261102435
-import { formatLongDate, parseDayKey } from '../../utils/date';
-import { getCustomDateSummary } from './utils';
+import { formatLongDate, parseDayKey } from '../../../utils/date';
+import { getCustomDateSummary } from './officeHoursUtils';
 
 function OfficeHoursDetailsFields({
   isRecurring,

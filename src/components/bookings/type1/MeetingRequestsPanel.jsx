@@ -1,5 +1,5 @@
 //Stalbek Ulanbek uulu 261102435
-import MeetingRequestList from '../meeting/MeetingRequestList';
+import MeetingRequestList from './MeetingRequestList';
 
 function MeetingRequestsPanel({
   actingRequestId = '',
@@ -15,7 +15,6 @@ function MeetingRequestsPanel({
           <p className="eyebrow">Meeting requests</p>
           <h2>Manage requests</h2>
         </div>
-        <span className="availability-form-note">Review</span>
       </div>
 
       {loading ? (

@@ -1,6 +1,6 @@
 //Stalbek Ulanbek uulu 261102435
 
-import { getPreviewLabel, getTimeOptionKey } from './utils';
+import { getPreviewLabel, getTimeOptionKey } from './officeHoursUtils';
 
 function OfficeHoursPreview({
   officeHoursForm,
@@ -11,8 +11,8 @@ function OfficeHoursPreview({
 }) {
   return (
     <aside className="office-hours-preview-card">
-      <p className="eyebrow">Preview</p>
-      <h3>{slotPreviewCount} bookable slots</h3>
+      <h3>Meeting preview</h3>
+      <p>{slotPreviewCount} bookable slot{slotPreviewCount === 1 ? '' : 's'}</p>
       <p>{previewSummary}</p>
 
       <div className="office-hours-preview-list">

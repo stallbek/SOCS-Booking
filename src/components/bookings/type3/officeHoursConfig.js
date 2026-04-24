@@ -1,25 +1,4 @@
-import { getDayKey } from '../../utils/date';
-
-export const bookingTypes = [
-  {
-    id: 'type-1',
-    label: 'Type 1',
-    title: 'Request meeting',
-    copy: 'Review incoming requests'
-  },
-  {
-    id: 'type-2',
-    label: 'Type 2',
-    title: 'Group meeting',
-    copy: 'Create group meetings slots'
-  },
-  {
-    id: 'type-3',
-    label: 'Type 3',
-    title: 'Office hours',
-    copy: 'Create office hours'
-  }
-];
+import { getDayKey } from '../../../utils/date';
 
 export const weekdayOptions = [
   { value: '1', label: 'Monday', shortLabel: 'Mon' },

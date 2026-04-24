@@ -1,15 +1,16 @@
-import { bookingTypes, weekdayOptions } from './constants';
+import { ownerBookingTypes } from '../shared/bookingTypeOptions';
+import { weekdayOptions } from './officeHoursConfig';
 import {
   formatLongDate,
   getDayKey,
   parseDayKey
-} from '../../utils/date';
+} from '../../../utils/date';
 import {
   filterOfficeHoursSlots,
   getBookingTypeFromSlot,
   getOwnerSlotState,
   getSlotDateTimes
-} from '../../utils/bookings';
+} from '../../../utils/bookings';
 
 function parseDateInput(value) {
   return new Date(`${value}T12:00:00`);
@@ -56,7 +57,7 @@ function isDateBeforeToday(value) {
 }
 
 export function getSelectedBookingType(typeId) {
-  return bookingTypes.find((type) => type.id === typeId) || bookingTypes[2];
+  return ownerBookingTypes.find((type) => type.id === typeId) || ownerBookingTypes[2];
 }
 
 export { filterOfficeHoursSlots };

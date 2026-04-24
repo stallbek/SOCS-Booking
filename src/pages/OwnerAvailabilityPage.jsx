@@ -19,15 +19,15 @@ import {
   getRequestId,
   getRequestPerson,
   normalizeStatus
-} from '../components/meeting/utils';
-import BookingTypePlaceholder from '../components/ownerAvailability/BookingTypePlaceholder';
-import BookingTypeSelector from '../components/ownerAvailability/BookingTypeSelector';
-import MeetingRequestsPanel from '../components/ownerAvailability/MeetingRequestsPanel';
-import OfficeHoursForm from '../components/ownerAvailability/OfficeHoursForm';
+} from '../components/bookings/type1/requestUtils';
+import OwnerGroupMeetingPanel from '../components/bookings/type2/OwnerGroupMeetingPanel';
+import BookingTypeSelector from '../components/bookings/shared/BookingTypeSelector';
+import MeetingRequestsPanel from '../components/bookings/type1/MeetingRequestsPanel';
+import OfficeHoursForm from '../components/bookings/type3/OfficeHoursForm';
 import {
   createInitialOfficeHoursForm,
   createTimeOption
-} from '../components/ownerAvailability/constants';
+} from '../components/bookings/type3/officeHoursConfig';
 import {
   buildOfficeHoursPayload,
   countOfficeHourSlots,
@@ -40,7 +40,7 @@ import {
   getSeriesEndDate,
   mapSlotToEvent,
   sortTimeOptions
-} from '../components/ownerAvailability/utils';
+} from '../components/bookings/type3/officeHoursUtils';
 
 //Stalbek Ulanbek uulu 261102435
 
@@ -525,7 +525,7 @@ function OwnerAvailabilityPage() {
           timeOptions={timeOptions}
         />
       ) : (
-        <BookingTypePlaceholder bookingType={selectedBookingType} />
+        <OwnerGroupMeetingPanel />
       )}
 
       {selectedBookingType.id === 'type-1' || selectedBookingType.id === 'type-3' ? (

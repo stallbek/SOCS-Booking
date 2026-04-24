@@ -1942,14 +1942,103 @@ h3 {
   gap: 0.85rem;
 }
 
+.group-meeting-owner-list,
+.group-date-card-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
 .group-meeting-card {
   max-height: calc(100vh - 8rem);
   overflow-y: auto;
   scrollbar-gutter: stable;
 }
 
+.group-meeting-owner-card {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--dashboard-surface);
+}
+
 .group-meeting-summary {
   position: static;
+}
+
+.group-date-card {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(246, 246, 246, 0.72);
+}
+
+.group-date-card-head,
+.group-date-card-toolbar,
+.group-share-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.group-date-card-toolbar {
+  padding-top: 0.15rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.group-preview-card {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
+.group-date-time-label {
+  display: flex;
+  align-items: center;
+  min-height: 2.45rem;
+}
+
+.group-date-time-label strong {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.meeting-option-group {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.meeting-option-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.meeting-option-group-head span,
+.meeting-option-group-label,
+.group-share-label {
+  color: var(--gray-600);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.meeting-option-group-label {
+  margin: 0;
+}
+
+.meeting-option-group-list {
+  display: grid;
+  gap: 0.65rem;
 }
 
 .meeting-option-row {
@@ -1966,6 +2055,10 @@ h3 {
 .meeting-option-row-selected {
   border-left-color: var(--mcgill-red);
   background: rgba(237, 27, 47, 0.06);
+}
+
+.meeting-option-row-readonly {
+  align-items: flex-start;
 }
 
 .meeting-option-main {
@@ -1995,6 +2088,32 @@ h3 {
   border: 1px solid rgba(0, 0, 0, 0.12);
   background: #ffffff;
   font-weight: 800;
+}
+
+.meeting-option-state {
+  color: var(--gray-700);
+  font-size: 0.8rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.group-share-box {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.8rem;
+  border: 1px solid rgba(158, 9, 24, 0.16);
+  background: rgba(237, 27, 47, 0.05);
+}
+
+.group-share-box strong {
+  font-family: var(--font-card-title);
+  font-size: 1.05rem;
+}
+
+.group-share-note {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.55;
 }
 
 .calendar-compose-top {
@@ -2406,7 +2525,11 @@ h3 {
   }
 
   .weekly-pattern-head,
-  .office-hours-footer {
+  .office-hours-footer,
+  .group-date-card-head,
+  .group-date-card-toolbar,
+  .group-share-actions,
+  .meeting-option-group-head {
     flex-wrap: wrap;
   }
 

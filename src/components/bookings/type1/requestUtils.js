@@ -1,4 +1,4 @@
-import { getDatePart, getDayKey } from '../../utils/date';
+import { getDatePart, getDayKey } from '../../../utils/date';
 
 export function createInitialMeetingRequestForm() {
   const todayKey = getDayKey(new Date());
@@ -13,10 +13,6 @@ export function createInitialMeetingRequestForm() {
 
 export function getRequestId(request) {
   return request?._id || request?.id || '';
-}
-
-export function getTimeOptionId(option) {
-  return option?._id || option?.id || '';
 }
 
 export function getRequestPerson(request, view) {
@@ -66,24 +62,6 @@ export function buildMeetingRequestPayload(ownerId, form) {
     preferredStartTime: form.preferredStartTime,
     preferredEndTime: form.preferredEndTime
   };
-}
-
-export function getGroupOptionDateKey(option) {
-  return getDatePart(option.date);
-}
-
-export function getVoteCount(option) {
-  return Array.isArray(option?.votes) ? option.votes.length : 0;
-}
-
-export function getVoteUserId(vote) {
-  return typeof vote === 'string' ? vote : vote?._id || vote?.id || '';
-}
-
-export function getCurrentUserVoteIds(group, currentUserId) {
-  return (group?.timeOptions || [])
-    .filter((option) => (option.votes || []).some((vote) => String(getVoteUserId(vote)) === String(currentUserId)))
-    .map(getTimeOptionId);
 }
 
 export function createEmailAction(email, label, subject = '', body = '') {

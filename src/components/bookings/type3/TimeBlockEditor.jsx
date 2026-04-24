@@ -1,8 +1,8 @@
 //Stalbek Ulanbek uulu 261102435
 
-import { formatLongDate, parseDayKey } from '../../utils/date';
-import { weekdayOptions } from './constants';
-import { getCustomDateSummary, getTimeOptionKey } from './utils';
+import { formatLongDate, parseDayKey } from '../../../utils/date';
+import { weekdayOptions } from './officeHoursConfig';
+import { getCustomDateSummary, getTimeOptionKey } from './officeHoursUtils';
 
 function getPatternHeading(scheduleMode, singleDate) {
   if (scheduleMode === 'recurring') {

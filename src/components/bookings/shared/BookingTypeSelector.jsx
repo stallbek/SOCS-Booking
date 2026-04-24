@@ -1,10 +1,10 @@
 //Stalbek Ulanbek uulu 261102435
 
-import BookingTypeButton from '../BookingTypeButton';
-import { bookingTypes } from './constants';
+import BookingTypeButton from '../../BookingTypeButton';
+import { ownerBookingTypes } from './bookingTypeOptions';
 
 function BookingTypeSelector({
-  bookingTypeOptions = bookingTypes,
+  bookingTypeOptions = ownerBookingTypes,
   label = 'Booking types',
   selectedBookingTypeId,
   onSelectBookingType

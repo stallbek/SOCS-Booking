@@ -1,16 +1,16 @@
 //Stalbek Ulanbek uulu 261102435
 
 import { useState } from 'react';
-import { apiRequest } from '../../api/api';
-import { useFeedback } from '../../context/FeedbackContext';
-import { getItemId } from '../../utils/bookings';
+import { apiRequest } from '../../../api/api';
+import { useFeedback } from '../../../context/FeedbackContext';
+import { getItemId } from '../../../utils/bookings';
 import MeetingDetailsFields from './MeetingDetailsFields';
 import {
   buildMeetingRequestPayload,
   createEmailAction,
   createInitialMeetingRequestForm,
   getMeetingRequestValidationMessage
-} from './utils';
+} from './requestUtils';
 
 function StudentMeetingRequestPanel({ selectedOwner }) {
   const { notify } = useFeedback();

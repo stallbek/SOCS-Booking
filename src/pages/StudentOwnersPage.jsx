@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiRequest } from '../api/api';
-import OwnerDirectoryPanel from '../components/meeting/OwnerDirectoryPanel';
+import OwnerDirectoryPanel from '../components/bookings/shared/OwnerDirectoryPanel';
 import PageHeader from '../components/PageHeader';
-import BookingTypeSelector from '../components/ownerAvailability/BookingTypeSelector';
+import BookingTypeSelector from '../components/bookings/shared/BookingTypeSelector';
 import SchedulePanel from '../components/SchedulePanel';
-import StudentGroupMeetingPanel from '../components/meeting/StudentGroupMeetingPanel';
-import StudentMeetingRequestPanel from '../components/meeting/StudentMeetingRequestPanel';
+import StudentGroupMeetingPanel from '../components/bookings/type2/StudentGroupMeetingPanel';
+import StudentMeetingRequestPanel from '../components/bookings/type1/StudentMeetingRequestPanel';
 import ScheduleCalendar from '../components/ScheduleCalendar';
 import { useFeedback } from '../context/FeedbackContext';
 import { useSession } from '../context/SessionContext';
@@ -24,24 +24,7 @@ import {
   getSlotDateTimes,
   getStudentSlotState
 } from '../utils/bookings';
-
-const studentBookingTypes = [
-  {
-    id: 'type-1',
-    title: 'Request meeting',
-    copy: 'Send a request.'
-  },
-  {
-    id: 'type-2',
-    title: 'Group meeting',
-    copy: 'Vote by code.'
-  },
-  {
-    id: 'type-3',
-    title: 'Office hours',
-    copy: 'Book a slot.'
-  }
-];
+import { studentBookingTypes } from '../components/bookings/shared/bookingTypeOptions';
 
 //Stalbek Ulanbek uulu 261102435
 
@@ -65,7 +48,7 @@ function StudentOwnersPage() {
   const { currentUser } = useSession();
   const { notify } = useFeedback();
   const [searchParams] = useSearchParams();
-  const isStudent = currentUser?.role === 'user';
+  const canUseBookingPage = Boolean(currentUser);
   const [selectedBookingTypeId, setSelectedBookingTypeId] = useState(() => (
     searchParams.get('groupCode') ? 'type-2' : 'type-1'
   ));
@@ -75,7 +58,7 @@ function StudentOwnersPage() {
   const [selectedOwner, setSelectedOwner] = useState(null);
   const [ownerSlots, setOwnerSlots] = useState([]);
   const [selectedDayKey, setSelectedDayKey] = useState('');
-  const [loadingOwners, setLoadingOwners] = useState(isStudent);
+  const [loadingOwners, setLoadingOwners] = useState(canUseBookingPage);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [bookingSlotId, setBookingSlotId] = useState('');
   const [showAllSchedule, setShowAllSchedule] = useState(false);
@@ -86,7 +69,7 @@ function StudentOwnersPage() {
   const scheduleContentRef = useRef(null);
 
   const loadOwners = async () => {
-    if (!isStudent) {
+    if (!canUseBookingPage) {
       return;
     }
 
@@ -137,16 +120,16 @@ function StudentOwnersPage() {
 
   useEffect(() => {
     loadOwners();
-  }, [isStudent]);
+  }, [canUseBookingPage]);
 
   useEffect(() => {
-    if (!isStudent) {
+    if (!canUseBookingPage) {
       return;
     }
 
     setSelectedDayKey('');
     loadOwnerSlots(selectedOwnerId);
-  }, [isStudent, selectedOwnerId]);
+  }, [canUseBookingPage, selectedOwnerId]);
 
   const filteredOwners = useMemo(() => {
     const query = ownerSearch.trim().toLowerCase();
@@ -291,13 +274,13 @@ function StudentOwnersPage() {
     }
   };
 
-  if (!isStudent) {
+  if (!canUseBookingPage) {
     return (
       <div className="dashboard-page student-owners-page">
         <PageHeader
-          description="Students book here."
-          eyebrow="Owners"
-          title="Student account required."
+          description="Signed-in users book here."
+          eyebrow="Bookings"
+          title="Account required."
         />
       </div>
     );
