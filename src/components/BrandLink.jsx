@@ -8,8 +8,7 @@ function BrandLink() {
       <img className="brand-logo" src={mcgillLogo} alt="McGill University visual mark" />
       <span className="brand-lockup">
         <span className="brand-name">
-          <span className="brand-name-main">SOCS</span>
-          <span className="brand-name-accent">Booking</span>
+          <span className="brand-name-main">SOCS</span><span className="brand-name-accent">Booking</span>
         </span>
         <span className="brand-subtitle">
           <span className="brand-subtitle-prefix">for</span>

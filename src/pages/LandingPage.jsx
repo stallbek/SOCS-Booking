@@ -9,38 +9,38 @@ const productName = 'SOCS Booking';
 
 const workflow = [
   {
-    step: 'Find the person you need',
-    text: 'Browse professors and teaching assistants with active availability, or open a shared link for one specific person.',
+    step: 'Request a meeting',
+    text: 'Send a meeting request to any professor or TA. They review it on their dashboard and accept or decline.',
   },
   {
-    step: 'Choose an available time',
-    text: 'Look through open slots and reserve a time that works for your schedule.',
+    step: 'Schedule a group meeting',
+    text: 'An owner picks available time windows and invites participants. Everyone votes on the times that work, and the owner picks the best fit.',
   },
   {
-    step: 'Manage your appointments',
-    text: 'See your upcoming bookings, cancel if needed, and contact the slot owner when plans change.',
+    step: 'Reserve office hours',
+    text: 'Professors post recurring weekly office hours. Students browse open slots and reserve a time directly.',
   },
 ];
 
 const highlights = [
   {
-    title: 'Office hours and appointments',
-    text: 'Professors and TAs can post bookable slots for office hours, meetings, and one-on-one help.',
+    title: 'Shareable invitation links',
+    text: 'Owners generate a direct booking link they can share in slides or emails. Students click it, log in, and see only that owner\'s available slots.',
   },
   {
-    title: 'Recurring availability',
-    text: 'Weekly availability can be repeated across the semester instead of being entered one slot at a time.',
+    title: 'Role-based access',
+    text: 'Professors and TAs (@mcgill.ca) create and manage slots. Students (@mail.mcgill.ca) browse owners, reserve times, and manage their bookings.',
   },
   {
-    title: 'Clear booking visibility',
-    text: 'Students can review their bookings, and owners can see who reserved each available time.',
+    title: 'Dashboard for everyone',
+    text: 'Both owners and students get a personal dashboard showing upcoming appointments, booking status, and quick actions like cancel or email.',
   },
 ];
 
 const heroPoints = [
-  'For office hours, advising, quick questions, and recurring availability',
-  'For McGill students booking time with professors and teaching assistants',
-  'For keeping available slots and booked meetings in one place',
+  'Three booking types: individual meetings, group meetings, and office hours',
+  'Only McGill emails can register — owners create slots, students reserve them',
+  'Shareable invitation links so owners can distribute booking pages directly',
 ];
 
 function LandingPage({ authMode }) {
@@ -70,10 +70,10 @@ function LandingPage({ authMode }) {
           <section className="hero section-grid" id="overview">
             <div className="hero-copy">
               <p className="eyebrow">McGill School of Computer Science</p>
-              <h1>Simpler office-hour booking at McGill.</h1>
+              <h1>Meetings, group scheduling, and office hours at McGill.</h1>
               <p className="hero-text">
-                {productName} gives the School of Computer Science one place to post office hours, share
-                booking links, and reserve appointment times.
+                {productName} lets SOCS professors and TAs manage individual meeting requests,
+                schedule group meetings, and post recurring office hours — all in one place.
               </p>
 
               <div className="hero-actions">
@@ -98,9 +98,9 @@ function LandingPage({ authMode }) {
           <section className="info-section" id="how-it-works">
             <div className="section-heading">
               <p className="eyebrow">How it works</p>
-              <h2>Book time with less email and less back-and-forth.</h2>
+              <h2>Three ways to book time with professors and TAs.</h2>
               <p className="section-lead">
-                Book a time, confirm it, and keep track of it without having to manage the whole process by email.
+                Request a one-on-one meeting, coordinate a group time, or reserve an office-hour slot — each type has its own flow.
               </p>
             </div>
 
@@ -118,9 +118,9 @@ function LandingPage({ authMode }) {
           <section className="info-section" id="features">
             <div className="section-heading">
               <p className="eyebrow">Feature highlights</p>
-              <h2>Built around the way academic scheduling actually works.</h2>
+              <h2>Built around how professors and students actually meet.</h2>
               <p className="section-lead">
-                The focus is on the everyday parts of office hours: posting slots, booking them, and seeing what is already taken.
+                Each booking type handles a different use case — from quick one-on-one requests to semester-long office hours.
               </p>
             </div>
 
@@ -137,10 +137,10 @@ function LandingPage({ authMode }) {
 
         <footer className="site-footer">
           <div>
-            <p className="eyebrow">For office hours and bookings</p>
-            <h2>A booking tool for office hours, meetings, and student support.</h2>
+            <p className="eyebrow">For SOCS at McGill</p>
+            <h2>Individual meetings, group scheduling, and office hours — one app.</h2>
             <p className="footer-copy">
-              Post availability, share a booking link, reserve open times, and keep track of appointments without scattered messages.
+              Owners post availability and manage requests. Students reserve slots, vote on group times, and track all their bookings from one dashboard.
             </p>
           </div>
 
