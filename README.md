@@ -1,5 +1,7 @@
 # SOCS Booking Application – Group 30
 
+![SOCS Booking Application](./screenshot.png)
+
 ## Running Website URL
 
 **URL:** https://winter2026-comp307-group30.cs.mcgill.ca/
