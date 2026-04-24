@@ -1,12 +1,6 @@
 import { formatLongDate, parseDayKey } from '../../utils/date';
 import { getCustomDateSummary } from './utils';
 
-function getModeCopy(scheduleMode) {
-  return scheduleMode === 'recurring'
-    ? 'Use this when the same OH repeats each week.'
-    : 'Use this when the OH is offered on one specific date.';
-}
-
 function OfficeHoursDetailsFields({
   isRecurring,
   officeHoursForm,
@@ -36,8 +30,6 @@ function OfficeHoursDetailsFields({
           <strong>Specific date only</strong>
         </button>
       </div>
-
-      <p className="office-hours-mode-copy">{getModeCopy(scheduleMode)}</p>
 
       <label className="form-field office-hours-title-field">
         <span>OH title</span>
@@ -77,8 +69,7 @@ function OfficeHoursDetailsFields({
           </label>
 
           <div className="series-summary" aria-live="polite">
-            <span>Runs through</span>
-            <strong>{seriesEndDate ? formatLongDate(parseDayKey(seriesEndDate)) : 'Choose a start date'}</strong>
+            <strong>Runs through: {seriesEndDate ? formatLongDate(parseDayKey(seriesEndDate)) : 'Choose a start date'}</strong>
           </div>
         </div>
       ) : (
@@ -94,8 +85,7 @@ function OfficeHoursDetailsFields({
           </label>
 
           <div className="series-summary" aria-live="polite">
-            <span>Selected day</span>
-            <strong>{getCustomDateSummary(officeHoursForm.singleDate)}</strong>
+            <strong>Selected day: {getCustomDateSummary(officeHoursForm.singleDate)}</strong>
           </div>
         </div>
       )}

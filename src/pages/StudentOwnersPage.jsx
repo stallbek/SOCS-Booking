@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiRequest } from '../api/api';
 import BookingTypeSelector from '../components/ownerAvailability/BookingTypeSelector';
@@ -79,6 +79,12 @@ function StudentOwnersPage() {
   const [feedback, setFeedback] = useState('');
   const [bookingSlotId, setBookingSlotId] = useState('');
   const [noticeActions, setNoticeActions] = useState([]);
+  const [showAllSchedule, setShowAllSchedule] = useState(false);
+  const [scheduleContentMaxHeight, setScheduleContentMaxHeight] = useState(0);
+  const [hasOverflowingSchedule, setHasOverflowingSchedule] = useState(false);
+  const calendarCardRef = useRef(null);
+  const scheduleCardRef = useRef(null);
+  const scheduleContentRef = useRef(null);
 
   const loadOwners = async () => {
     if (!isStudent) {
@@ -145,14 +151,13 @@ function StudentOwnersPage() {
 
   const filteredOwners = useMemo(() => {
     const query = ownerSearch.trim().toLowerCase();
+    const sortedOwners = [...owners].sort((firstOwner, secondOwner) => firstOwner.name.localeCompare(secondOwner.name));
 
     if (!query) {
       return [];
     }
 
-    return [...owners]
-      .sort((firstOwner, secondOwner) => firstOwner.name.localeCompare(secondOwner.name))
-      .filter((owner) => {
+    return sortedOwners.filter((owner) => {
         return owner.name.toLowerCase().includes(query) || owner.email.toLowerCase().includes(query);
       });
   }, [ownerSearch, owners]);
@@ -161,14 +166,17 @@ function StudentOwnersPage() {
     () => ownerSlots.map((slot) => mapPublicSlotToEvent(slot, currentUser.id)),
     [ownerSlots, currentUser.id]
   );
+  const todayDayKey = getDayKey(new Date());
+  const upcomingEvents = useMemo(
+    () => events.filter((event) => getDayKey(event.startAt) >= todayDayKey),
+    [events, todayDayKey]
+  );
 
   const visibleEvents = selectedDayKey
-    ? events.filter((event) => getDayKey(event.startAt) === selectedDayKey)
-    : events;
+    ? upcomingEvents.filter((event) => getDayKey(event.startAt) === selectedDayKey)
+    : upcomingEvents;
 
   const groupedEvents = groupItemsByDay(visibleEvents);
-  const openSlotCount = events.filter((event) => event.isBookable).length;
-  const reservedSlotCount = events.filter((event) => event.isBooked).length;
 
   const scheduleHeading = selectedDayKey
     ? `Office hours on ${formatLongDate(parseDayKey(selectedDayKey))}`
@@ -191,6 +199,75 @@ function StudentOwnersPage() {
       setOwnerSlots([]);
     }
   };
+
+  useEffect(() => {
+    setShowAllSchedule(false);
+  }, [selectedOwnerId, selectedDayKey, selectedBookingTypeId]);
+
+  useEffect(() => {
+    if (!isType3 || !selectedOwner) {
+      setScheduleContentMaxHeight(0);
+      setHasOverflowingSchedule(false);
+      return undefined;
+    }
+
+    const updateScheduleHeight = () => {
+      const calendarHeight = calendarCardRef.current?.offsetHeight || 0;
+      const scheduleHeight = scheduleCardRef.current?.offsetHeight || 0;
+      const visibleContentHeight = scheduleContentRef.current?.offsetHeight || 0;
+      const fullContentHeight = scheduleContentRef.current?.scrollHeight || 0;
+
+      if (!calendarHeight || !scheduleHeight || !visibleContentHeight) {
+        setScheduleContentMaxHeight(0);
+        setHasOverflowingSchedule(false);
+        return;
+      }
+
+      const reservedHeight = scheduleHeight - visibleContentHeight;
+      const nextContentMaxHeight = Math.max(calendarHeight - reservedHeight, 0);
+
+      setScheduleContentMaxHeight(nextContentMaxHeight);
+      setHasOverflowingSchedule(fullContentHeight > nextContentMaxHeight + 4);
+    };
+
+    updateScheduleHeight();
+
+    const resizeObserver = typeof ResizeObserver === 'undefined'
+      ? null
+      : new ResizeObserver(() => {
+          updateScheduleHeight();
+        });
+
+    if (resizeObserver) {
+      if (calendarCardRef.current) {
+        resizeObserver.observe(calendarCardRef.current);
+      }
+
+      if (scheduleCardRef.current) {
+        resizeObserver.observe(scheduleCardRef.current);
+      }
+
+      if (scheduleContentRef.current) {
+        resizeObserver.observe(scheduleContentRef.current);
+      }
+    }
+
+    window.addEventListener('resize', updateScheduleHeight);
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', updateScheduleHeight);
+    };
+  }, [
+    feedback,
+    isType3,
+    loadingSlots,
+    noticeActions.length,
+    selectedDayKey,
+    selectedOwner,
+    showAllSchedule,
+    visibleEvents.length
+  ]);
 
   const handleBookSlot = async (slotId) => {
     setFeedback('');
@@ -240,16 +317,18 @@ function StudentOwnersPage() {
 
       {shouldShowOwnerDirectory ? (
         <section className="dashboard-card owner-directory-card">
-          <div className="dashboard-card-head">
-            <div>
-              <p className="eyebrow">Owners</p>
-              <h2>Owner</h2>
+          {isType1 ? null : (
+            <div className="dashboard-card-head">
+              <div>
+                <p className="eyebrow">Search owners</p>
+                <h2>Owners</h2>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="owner-directory-toolbar">
             <label className="form-field owner-search-field">
-              <span>Search owners</span>
+              <span>{isType1 ? 'Search name' : 'Search owners'}</span>
               <input
                 onChange={(event) => handleOwnerSearchChange(event.target.value)}
                 placeholder="Search by name"
@@ -257,12 +336,6 @@ function StudentOwnersPage() {
                 value={ownerSearch}
               />
             </label>
-
-            <p className="owner-directory-count">
-              {ownerSearch.trim()
-                ? `${filteredOwners.length} match${filteredOwners.length === 1 ? '' : 'es'}`
-                : 'Type a name'}
-            </p>
           </div>
 
           {loadingOwners ? (
@@ -270,12 +343,12 @@ function StudentOwnersPage() {
               <h3>Loading owners</h3>
               <p>Checking the owner directory.</p>
             </div>
-          ) : !ownerSearch.trim() ? (
+          ) : !owners.length ? (
             <div className="dashboard-empty-state">
-              <h3>Search owners</h3>
-              <p>Type a name to begin.</p>
+              <h3>No owners found</h3>
+              <p>No owner accounts are available in the booking directory yet.</p>
             </div>
-          ) : owners.length ? (
+          ) : ownerSearch.trim() ? (
             filteredOwners.length ? (
               <div className="owner-directory-grid">
                 {filteredOwners.map((owner) => {
@@ -300,40 +373,12 @@ function StudentOwnersPage() {
             ) : (
               <div className="dashboard-empty-state">
                 <h3>No owners match</h3>
-                <p>Try another name or clear the search to browse available owners.</p>
-                <button className="text-link dashboard-show-all" onClick={() => setOwnerSearch('')} type="button">
+                <p>Try another name or clear the search.</p>
+                <button className="text-link dashboard-show-all" onClick={() => handleOwnerSearchChange('')} type="button">
                   Clear search
                 </button>
               </div>
             )
-          ) : (
-            <div className="dashboard-empty-state">
-              <h3>No owners found</h3>
-              <p>No owner accounts are available in the booking directory yet.</p>
-            </div>
-          )}
-        </section>
-      ) : null}
-
-      {shouldShowOwnerDirectory && selectedOwner ? (
-        <section className="dashboard-card owner-summary-card">
-          <div>
-            <p className="eyebrow">Owner</p>
-            <h2>{selectedOwner.name}</h2>
-            <p className="dashboard-copy">{selectedOwner.email}</p>
-          </div>
-
-          {isType3 ? (
-            <div className="owner-summary-stats" aria-label="Office hour summary">
-              <div className="owner-summary-stat">
-                <span>Open</span>
-                <strong>{openSlotCount}</strong>
-              </div>
-              <div className="owner-summary-stat">
-                <span>Reserved</span>
-                <strong>{reservedSlotCount}</strong>
-              </div>
-            </div>
           ) : null}
         </section>
       ) : null}
@@ -343,29 +388,43 @@ function StudentOwnersPage() {
 
       {isType3 ? (
         <div className="dashboard-layout">
-          <ScheduleCalendar
-            items={events}
-            onDaySelect={setSelectedDayKey}
-            selectedDayKey={selectedDayKey}
-            title={selectedOwner ? `${selectedOwner.name}'s calendar` : undefined}
-          />
+          <div ref={calendarCardRef}>
+            <ScheduleCalendar
+              items={upcomingEvents}
+              onDaySelect={setSelectedDayKey}
+              selectedDayKey={selectedDayKey}
+              title={selectedOwner ? `${selectedOwner.name}'s calendar` : undefined}
+            />
+          </div>
 
-          <section className="dashboard-card events-card">
+          <section className="dashboard-card events-card" ref={scheduleCardRef}>
             <div className="dashboard-card-head">
               <div>
                 <p className="eyebrow">Schedule</p>
                 <h2>{scheduleHeading}</h2>
               </div>
 
-              {selectedDayKey ? (
-                <button
-                  className="text-link dashboard-show-all"
-                  onClick={() => setSelectedDayKey('')}
-                  type="button"
-                >
-                  Show all
-                </button>
-              ) : null}
+              <div className="dashboard-card-actions">
+                {selectedDayKey ? (
+                  <button
+                    className="text-link dashboard-show-all"
+                    onClick={() => setSelectedDayKey('')}
+                    type="button"
+                  >
+                    Show all
+                  </button>
+                ) : null}
+
+                {hasOverflowingSchedule ? (
+                  <button
+                    className="text-link dashboard-show-all"
+                    onClick={() => setShowAllSchedule((currentValue) => !currentValue)}
+                    type="button"
+                  >
+                    {showAllSchedule ? 'Show less' : 'Show more'}
+                  </button>
+                ) : null}
+              </div>
             </div>
 
             {feedback || noticeActions.length ? (
@@ -381,67 +440,75 @@ function StudentOwnersPage() {
                 <p>Checking the selected owner's office-hour schedule.</p>
               </div>
             ) : groupedEvents.length ? (
-              <div className="dashboard-event-groups">
-                {groupedEvents.map((group) => (
-                  <div className="dashboard-event-group" key={group.dayKey}>
-                    {!selectedDayKey ? <h3 className="dashboard-group-label">{group.label}</h3> : null}
+              <div
+                className={`schedule-card-content${!showAllSchedule && hasOverflowingSchedule ? ' schedule-card-content-collapsed' : ''}`}
+                ref={scheduleContentRef}
+                style={!showAllSchedule && hasOverflowingSchedule && scheduleContentMaxHeight
+                  ? { maxHeight: `${scheduleContentMaxHeight}px` }
+                  : undefined}
+              >
+                <div className="dashboard-event-groups">
+                  {groupedEvents.map((group) => (
+                    <div className="dashboard-event-group" key={group.dayKey}>
+                      {!selectedDayKey ? <h3 className="dashboard-group-label">{group.label}</h3> : null}
 
-                    <div className="dashboard-event-list">
-                      {group.items.map((event) => (
-                        <article
-                          className={`dashboard-event-row student-owner-event-row${event.isPast ? ' dashboard-event-row-past' : ''}`}
-                          key={event.id}
-                        >
-                          <div className="dashboard-event-time">
-                            <strong>{formatTimeRange(event.startAt, event.endAt)}</strong>
-                            <span>{event.statusLabel}</span>
-                          </div>
-
-                          <div className="dashboard-event-main">
-                            <div className="dashboard-event-head">
-                              <h3>{event.title}</h3>
-                              <span className={`dashboard-badge${event.isPast ? ' dashboard-badge-muted' : ''}`}>
-                                {event.statusLabel}
-                              </span>
+                      <div className="dashboard-event-list">
+                        {group.items.map((event) => (
+                          <article
+                            className={`dashboard-event-row student-owner-event-row${event.isPast ? ' dashboard-event-row-past' : ''}`}
+                            key={event.id}
+                          >
+                            <div className="dashboard-event-time">
+                              <strong>{formatTimeRange(event.startAt, event.endAt)}</strong>
+                              <span>{event.statusLabel}</span>
                             </div>
 
-                            {event.description ? <p>{event.description}</p> : null}
-                            <p>{event.note}</p>
-                          </div>
+                            <div className="dashboard-event-main">
+                              <div className="dashboard-event-head">
+                                <h3>{event.title}</h3>
+                                <span className={`dashboard-badge${event.isPast ? ' dashboard-badge-muted' : ''}`}>
+                                  {event.statusLabel}
+                                </span>
+                              </div>
 
-                          <div className="dashboard-event-actions student-owner-actions">
-                            {event.ownerEmail ? (
-                              <a className="text-link" href={`mailto:${event.ownerEmail}`}>
-                                Email owner
-                              </a>
-                            ) : null}
+                              {event.description ? <p>{event.description}</p> : null}
+                              <p>{event.note}</p>
+                            </div>
 
-                            {event.isBooked ? (
-                              event.isMine ? (
-                                <Link className="text-link" to="/app/dashboard">
-                                  View on dashboard
-                                </Link>
+                            <div className="dashboard-event-actions student-owner-actions">
+                              {event.ownerEmail ? (
+                                <a className="text-link" href={`mailto:${event.ownerEmail}`}>
+                                  Email owner
+                                </a>
+                              ) : null}
+
+                              {event.isBooked ? (
+                                event.isMine ? (
+                                  <Link className="text-link" to="/app/dashboard">
+                                    View on dashboard
+                                  </Link>
+                                ) : (
+                                  <span className="booking-status-text">Already booked</span>
+                                )
+                              ) : event.isPast ? (
+                                <span className="booking-status-text">Slot passed</span>
                               ) : (
-                                <span className="booking-status-text">Already booked</span>
-                              )
-                            ) : event.isPast ? (
-                              <span className="booking-status-text">Slot passed</span>
-                            ) : (
-                              <button
-                                className="button button-primary student-book-button"
-                                disabled={bookingSlotId === event.id}
-                                onClick={() => handleBookSlot(event.id)}
-                                type="button"
-                              >
-                                {bookingSlotId === event.id ? 'Booking' : 'Book slot'}
-                              </button>
-                            )}
-                          </div>
-                        </article>
-                      ))}
+                                <button
+                                  className="button button-primary student-book-button"
+                                  disabled={bookingSlotId === event.id}
+                                  onClick={() => handleBookSlot(event.id)}
+                                  type="button"
+                                >
+                                  {bookingSlotId === event.id ? 'Booking' : 'Book slot'}
+                                </button>
+                              )}
+                            </div>
+                          </article>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             ) : (
               <div className="dashboard-empty-state">

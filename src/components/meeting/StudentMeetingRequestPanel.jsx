@@ -15,6 +15,7 @@ function StudentMeetingRequestPanel({ selectedOwner }) {
   const [feedback, setFeedback] = useState('');
   const [noticeActions, setNoticeActions] = useState([]);
   const [saving, setSaving] = useState(false);
+  const ownerHeading = selectedOwner ? `With ${selectedOwner.name}` : 'With owner';
 
   const handleFieldChange = (name, value) => {
     setForm((currentValues) => ({
@@ -69,19 +70,11 @@ function StudentMeetingRequestPanel({ selectedOwner }) {
     <section className="dashboard-card meeting-request-card">
       <div className="dashboard-card-head">
         <div>
-          <p className="eyebrow">Type 1</p>
-          <h2>Request a meeting</h2>
+          <p className="eyebrow">Request meeting</p>
+          <h2>{ownerHeading}</h2>
         </div>
         <span className="availability-form-note">Owner approval</span>
       </div>
-
-      {selectedOwner ? (
-        <p className="dashboard-copy">
-          Send a meeting request to {selectedOwner.name}. The booking appears on your dashboard after the owner accepts it.
-        </p>
-      ) : (
-        <p className="dashboard-copy">Choose an owner before sending a meeting request.</p>
-      )}
 
       <form className="office-hours-compose" onSubmit={handleSubmit}>
         <MeetingDetailsFields

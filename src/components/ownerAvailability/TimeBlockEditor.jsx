@@ -2,12 +2,6 @@ import { formatLongDate, parseDayKey } from '../../utils/date';
 import { weekdayOptions } from './constants';
 import { getCustomDateSummary, getTimeOptionKey } from './utils';
 
-function getTopCopy(scheduleMode) {
-  return scheduleMode === 'recurring'
-    ? 'Set a weekly schedule that repeats for the selected number of weeks.'
-    : 'Set OH times for one specific date.';
-}
-
 function getPatternHeading(scheduleMode, singleDate) {
   if (scheduleMode === 'recurring') {
     return 'Define the weekly schedule.';
@@ -48,16 +42,8 @@ function TimeBlockEditor({
   return (
     <div className="weekly-pattern-panel">
       <div className="weekly-pattern-head">
-        <div>
-          <h3>{getPatternHeading(scheduleMode, officeHoursForm.singleDate)}</h3>
-        </div>
-
-        <button className="button button-muted" onClick={() => onAddTimeOption()} type="button">
-          Add time block
-        </button>
+        <h3>{getPatternHeading(scheduleMode, officeHoursForm.singleDate)}</h3>
       </div>
-
-      <p className="office-hours-top-copy">{getTopCopy(scheduleMode)}</p>
 
       {isRecurring ? (
         <div className="weekday-chip-row" aria-label="Add a weekly office-hour block">
@@ -78,6 +64,13 @@ function TimeBlockEditor({
           })}
         </div>
       ) : null}
+
+      <div className="time-block-toolbar">
+        <button className="button time-block-add-button" onClick={() => onAddTimeOption()} type="button">
+          <span aria-hidden="true" className="time-block-add-mark">+</span>
+          Add time block
+        </button>
+      </div>
 
       <div className="calendar-block-list">
         {sortedTimeOptions.length ? sortedTimeOptions.map((option) => (

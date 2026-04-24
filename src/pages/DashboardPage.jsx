@@ -77,30 +77,43 @@ function DashboardPage() {
     () => new Set(selectedBookingTypeIds),
     [selectedBookingTypeIds],
   );
+  const todayDayKey = getDayKey(new Date());
+  const upcomingEvents = useMemo(
+    () => events.filter((event) => getDayKey(event.startAt) >= todayDayKey),
+    [events, todayDayKey],
+  );
+  const upcomingCalendarEvents = useMemo(
+    () =>
+      calendarEvents.filter((event) => getDayKey(event.startAt) >= todayDayKey),
+    [calendarEvents, todayDayKey],
+  );
 
   const countsByType = useMemo(
     () =>
-      calendarEvents.reduce(
+      upcomingCalendarEvents.reduce(
         (counts, event) => ({
           ...counts,
           [event.bookingType]: (counts[event.bookingType] || 0) + 1,
         }),
         {},
       ),
-    [calendarEvents],
+    [upcomingCalendarEvents],
   );
 
   const typeFilteredEvents = useMemo(
-    () => events.filter((event) => selectedBookingTypes.has(event.bookingType)),
-    [events, selectedBookingTypes],
+    () =>
+      upcomingEvents.filter((event) =>
+        selectedBookingTypes.has(event.bookingType),
+      ),
+    [upcomingEvents, selectedBookingTypes],
   );
 
   const typeFilteredCalendarEvents = useMemo(
     () =>
-      calendarEvents.filter((event) =>
+      upcomingCalendarEvents.filter((event) =>
         selectedBookingTypes.has(event.bookingType),
       ),
-    [calendarEvents, selectedBookingTypes],
+    [upcomingCalendarEvents, selectedBookingTypes],
   );
 
   const visibleEvents = selectedDayKey
@@ -333,8 +346,8 @@ function DashboardPage() {
                 {!hasTypeFilters
                   ? "No booking types selected"
                   : isOwner
-                    ? "No booked appointments yet"
-                    : "No bookings yet"}
+                    ? "No upcoming booked appointments"
+                    : "No upcoming bookings"}
               </h3>
               <p>
                 {!hasTypeFilters
