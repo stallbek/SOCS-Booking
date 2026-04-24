@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
-const AUTH_API_BASE_URL = 'http://localhost:5000/api/auth';
+const AUTH_API_BASE_URL = '/api/auth';
 
 //context used to share session data
 const SessionContext = createContext(null);
@@ -14,7 +14,7 @@ function SessionProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    
+
     //check if user already logged in with cookie session
     const checkSession = async () => {
       try {
@@ -96,51 +96,51 @@ function SessionProvider({ children }) {
   };
 
   const register = async ({ name, email, password, confirmPassword }) => {
-  try {
+    try {
 
-    //send register request to backend
-    const response = await fetch(`${AUTH_API_BASE_URL}/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      credentials: 'include',
-      body: JSON.stringify({
-        name: name,
-        email: email,
-        password: password,
-        confirmPassword: confirmPassword
-      })
-    });
+      //send register request to backend
+      const response = await fetch(`${AUTH_API_BASE_URL}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: name,
+          email: email,
+          password: password,
+          confirmPassword: confirmPassword
+        })
+      });
 
-    //read backend response
-    const data = await response.json();
+      //read backend response
+      const data = await response.json();
 
-    //if register failed return error message
-    if (!response.ok) {
+      //if register failed return error message
+      if (!response.ok) {
+        return {
+          success: false,
+          message: data.error
+        };
+      }
+
+      //save logged in user after successful register
+      setCurrentUser(data.user);
+
+      return {
+        success: true,
+        user: data.user
+      };
+
+    } catch (error) {
+
+      //server or network problem
       return {
         success: false,
-        message: data.error
+        message: 'Something went wrong. Please try again.'
       };
     }
-
-    //save logged in user after successful register
-    setCurrentUser(data.user);
-
-    return {
-      success: true,
-      user: data.user
-    };
-
-  } catch (error) {
-
-    //server or network problem
-    return {
-      success: false,
-      message: 'Something went wrong. Please try again.'
-    };
-  }
-};
+  };
 
   const logout = async () => {
 
