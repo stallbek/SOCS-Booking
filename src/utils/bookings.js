@@ -60,6 +60,18 @@ export function getBookedById(slot) {
   return getItemId(slot?.bookedBy);
 }
 
+function getSlotAttendees(slot) {
+  return Array.isArray(slot?.attendees) ? slot.attendees : [];
+}
+
+function getPersonName(person) {
+  return person && typeof person === 'object' ? person.name || '' : '';
+}
+
+function getPersonEmail(person) {
+  return person && typeof person === 'object' ? person.email || '' : '';
+}
+
 export function getSlotDateTimes(slot) {
   return {
     startAt: buildDateTime(slot.date, slot.startTime),
@@ -84,9 +96,12 @@ export function filterOfficeHoursSlots(slots) {
 
 export function getStudentSlotState(slot, currentUserId, now = new Date()) {
   const bookedById = getBookedById(slot);
+  const isMultiAttendeeSlot = slot?.slotType === 'group' || slot?.slotType === 'office-hours';
+  const attendeeCount = getSlotAttendees(slot).length || (isMultiAttendeeSlot && bookedById ? 1 : 0);
   const isBooked = Boolean(bookedById);
   const isMine = Boolean(bookedById && String(bookedById) === String(currentUserId));
   const isPast = hasSlotStarted(slot, now);
+  const note = isMultiAttendeeSlot ? `Attendees: ${attendeeCount}` : 'Open for booking.';
 
   if (isMine) {
     return {
@@ -94,7 +109,7 @@ export function getStudentSlotState(slot, currentUserId, now = new Date()) {
       isMine,
       isPast,
       statusLabel: isPast ? 'Completed' : 'Reserved',
-      note: isPast ? 'You reserved this past slot.' : 'You already reserved this slot.'
+      note
     };
   }
 
@@ -104,7 +119,7 @@ export function getStudentSlotState(slot, currentUserId, now = new Date()) {
       isMine,
       isPast,
       statusLabel: isPast ? 'Completed' : 'Booked',
-      note: isPast ? 'This reserved slot has passed.' : 'This slot is already reserved.'
+      note
     };
   }
 
@@ -114,7 +129,7 @@ export function getStudentSlotState(slot, currentUserId, now = new Date()) {
       isMine,
       isPast,
       statusLabel: 'Past',
-      note: 'This slot has passed.'
+      note: isMultiAttendeeSlot ? note : 'This slot has passed.'
     };
   }
 
@@ -123,24 +138,32 @@ export function getStudentSlotState(slot, currentUserId, now = new Date()) {
     isMine,
     isPast,
     statusLabel: 'Open',
-    note: 'Open for booking.'
+    note
   };
 }
 
 export function getOwnerSlotState(slot, now = new Date()) {
-  const bookedName = slot.bookedByName || slot.bookedBy?.name || '';
-  const bookedEmail = slot.bookedByEmail || slot.bookedBy?.email || '';
-  const isBooked = Boolean(bookedName || bookedEmail || slot.bookedBy);
+  const attendees = getSlotAttendees(slot);
+  const attendeeEmails = attendees.map(getPersonEmail).filter(Boolean);
+  const isMultiAttendeeSlot = slot?.slotType === 'group' || slot?.slotType === 'office-hours';
+  const attendeeCount = Number(slot.attendeeCount) || attendees.length || (isMultiAttendeeSlot && slot.bookedBy ? 1 : 0);
+  const bookedName = isMultiAttendeeSlot
+    ? String(attendeeCount)
+    : slot.bookedByName || slot.bookedBy?.name || '';
+  const bookedEmail = slot.bookedByEmail || slot.bookedBy?.email || attendeeEmails.join(',');
+  const isBooked = Boolean(bookedName || bookedEmail || slot.bookedBy || attendeeCount);
   const isPast = hasSlotStarted(slot, now);
+  const note = isMultiAttendeeSlot ? `Attendees: ${attendeeCount}` : `Reserved by ${bookedName || bookedEmail || 'student'}`;
 
   if (isBooked) {
     return {
+      attendeeCount,
       bookedEmail,
       bookedName,
       isBooked,
       isPast,
-      statusLabel: isPast ? 'Completed' : 'Reserved',
-      note: `Reserved by ${bookedName || bookedEmail || 'student'}`
+      statusLabel: isPast ? 'Completed' : slot?.slotType === 'group' ? 'Scheduled' : 'Reserved',
+      note
     };
   }
 
@@ -151,17 +174,18 @@ export function getOwnerSlotState(slot, now = new Date()) {
       isBooked,
       isPast,
       statusLabel: 'Past',
-      note: 'This availability has passed.'
+      note: isMultiAttendeeSlot ? note : 'This availability has passed.'
     };
   }
 
   return {
+    attendeeCount,
     bookedEmail,
     bookedName,
     isBooked,
     isPast,
     statusLabel: 'Available',
-    note: 'Open for student booking.'
+    note: isMultiAttendeeSlot ? note : 'Open for student booking.'
   };
 }
 
@@ -179,8 +203,8 @@ export function mapOwnerAppointmentEvent(slot) {
     endAt,
     isPast: state.isPast,
     location: bookingTypeMeta.title,
-    note: slot.description || 'Student reservation confirmed.',
-    statusLabel: state.isPast ? 'Completed' : 'Booked',
+    note: slot.description || state.note || 'Student reservation confirmed.',
+    statusLabel: state.isPast ? 'Completed' : bookingType === 'type-2' ? 'Scheduled' : 'Booked',
     withName: state.bookedName || 'Student',
     withEmail: state.bookedEmail
   };
@@ -210,6 +234,7 @@ export function mapStudentAppointmentEvent(slot) {
   const isPast = hasSlotStarted(slot);
   const bookingType = getBookingTypeFromSlot(slot);
   const bookingTypeMeta = getBookingTypeMeta(bookingType);
+  const isGroupMeeting = bookingType === 'type-2';
 
   return {
     id: slot._id,
@@ -219,8 +244,8 @@ export function mapStudentAppointmentEvent(slot) {
     endAt,
     isPast,
     location: bookingTypeMeta.title,
-    note: slot.description || 'Owner reservation confirmed.',
-    statusLabel: isPast ? 'Completed' : 'Reserved',
+    note: slot.description || (isGroupMeeting ? 'Group meeting finalized.' : 'Owner reservation confirmed.'),
+    statusLabel: isPast ? 'Completed' : isGroupMeeting ? 'Scheduled' : 'Reserved',
     withName: slot.owner?.name || 'Owner',
     withEmail: slot.owner?.email || ''
   };
