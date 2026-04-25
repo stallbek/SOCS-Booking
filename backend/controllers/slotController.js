@@ -14,6 +14,47 @@ function addUtcDays(date, days) {
   return nextDate;
 }
 
+function getSlotAttendees(slot) {
+  return Array.isArray(slot.attendees) ? slot.attendees : [];
+}
+
+function getPersonName(person) {
+  return person && typeof person === 'object' && person.name ? person.name : '';
+}
+
+function getPersonEmail(person) {
+  return person && typeof person === 'object' && person.email ? person.email : '';
+}
+
+function getSlotBookingDetails(slot) {
+  const attendees = getSlotAttendees(slot);
+  const attendeeNames = attendees.map(getPersonName).filter(Boolean);
+  const attendeeEmails = attendees.map(getPersonEmail).filter(Boolean);
+  const attendeeCount = attendees.length;
+  const bookedByName = getPersonName(slot.bookedBy);
+  const bookedByEmail = getPersonEmail(slot.bookedBy);
+
+  if (slot.slotType === 'group' && attendeeCount) {
+    return {
+      attendeeCount,
+      attendeeEmails,
+      attendeeNames,
+      bookedByEmail: attendeeEmails.join(',') || null,
+      bookedByName: `${attendeeCount} attendee${attendeeCount === 1 ? '' : 's'}`,
+      isBooked: true
+    };
+  }
+
+  return {
+    attendeeCount,
+    attendeeEmails,
+    attendeeNames,
+    bookedByEmail: bookedByEmail || null,
+    bookedByName: bookedByName || null,
+    isBooked: Boolean(slot.bookedBy)
+  };
+}
+
 // OWNER: Slot Management
 // Create a single slot (private by default)
 exports.createSlot = async (req, res) => {
@@ -51,6 +92,7 @@ exports.getMySlots = async (req, res) => {
   try {
     const slots = await Slot.find({ owner: req.session.userId })
       .populate('bookedBy', 'name email')
+      .populate('attendees', 'name email')
       .sort({ date: 1 });
     res.json(slots);
   } catch (error) {
@@ -63,7 +105,8 @@ exports.getSlotById = async (req, res) => {
   try {
     const slot = await Slot.findById(req.params.id)
       .populate('owner', 'name email')
-      .populate('bookedBy', 'name email');
+      .populate('bookedBy', 'name email')
+      .populate('attendees', 'name email');
 
     if (!slot) {
       return res.status(404).json({ error: 'Slot not found.' });
@@ -80,13 +123,12 @@ exports.getMySlotDetails = async (req, res) => {
   try {
     const slots = await Slot.find({ owner: req.session.userId })
       .populate('bookedBy', 'name email')
+      .populate('attendees', 'name email')
       .sort({ date: 1 });
 
     const details = slots.map(slot => ({
       ...slot.toObject(),
-      bookedByName: slot.bookedBy ? slot.bookedBy.name : null,
-      bookedByEmail: slot.bookedBy ? slot.bookedBy.email : null,
-      isBooked: !!slot.bookedBy
+      ...getSlotBookingDetails(slot)
     }));
 
     res.json(details);
@@ -123,7 +165,9 @@ exports.activateSlot = async (req, res) => {
 // Delete a slot (notify booked user if applicable)
 exports.deleteSlot = async (req, res) => {
   try {
-    const slot = await Slot.findById(req.params.id).populate('bookedBy', 'email name');
+    const slot = await Slot.findById(req.params.id)
+      .populate('bookedBy', 'email name')
+      .populate('attendees', 'email name');
 
     if (!slot) {
       return res.status(404).json({ error: 'Slot not found.' });
@@ -133,15 +177,16 @@ exports.deleteSlot = async (req, res) => {
       return res.status(403).json({ error: 'You can only delete your own slots.' });
     }
 
-    const wasBooked = !!slot.bookedBy;
-    const bookedUserEmail = wasBooked ? slot.bookedBy.email : null;
+    const attendeeEmails = getSlotAttendees(slot).map(getPersonEmail).filter(Boolean);
+    const bookedEmails = slot.bookedBy ? [slot.bookedBy.email].filter(Boolean) : attendeeEmails;
+    const wasBooked = Boolean(slot.bookedBy || attendeeEmails.length);
 
     await Slot.findByIdAndDelete(req.params.id);
 
     res.json({
       message: 'Slot deleted.',
       wasPreviouslyBooked: wasBooked,
-      notifyEmail: bookedUserEmail ? `mailto:${bookedUserEmail}?subject=Your%20Booking%20Cancelled&body=Your%20booked%20slot%20has%20been%20cancelled.` : null
+      notifyEmail: bookedEmails.length ? `mailto:${bookedEmails.join(',')}?subject=Your%20Booking%20Cancelled&body=Your%20booked%20slot%20has%20been%20cancelled.` : null
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -241,6 +286,7 @@ exports.getMyOfficeHours = async (req, res) => {
       slotType: 'office-hours'
     })
       .populate('bookedBy', 'name email')
+      .populate('attendees', 'name email')
       .sort({ date: 1 });
 
     res.json(officeHours);
@@ -316,8 +362,14 @@ exports.cancelBooking = async (req, res) => {
 // Get all bookings made by current user
 exports.getMyBookings = async (req, res) => {
   try {
-    const bookings = await Slot.find({ bookedBy: req.session.userId })
+    const bookings = await Slot.find({
+      $or: [
+        { bookedBy: req.session.userId },
+        { attendees: req.session.userId }
+      ]
+    })
       .populate('owner', 'name email')
+      .populate('attendees', 'name email')
       .sort({ date: 1 });
 
     res.json(bookings);
@@ -356,6 +408,8 @@ exports.getOwnerPublicSlots = async (req, res) => {
       slotType: { $in: ['single', 'office-hours', 'group'] }
     })
       .populate('owner', 'name email')
+      .populate('bookedBy', 'name email')
+      .populate('attendees', 'name email')
       .sort({ date: 1 });
 
     res.json({
@@ -374,7 +428,8 @@ exports.getSlotByInviteCode = async (req, res) => {
 
     const slot = await Slot.findOne({ inviteCode })
       .populate('owner', 'name email')
-      .populate('bookedBy', 'name email');
+      .populate('bookedBy', 'name email')
+      .populate('attendees', 'name email');
 
     if (!slot) {
       return res.status(404).json({ error: 'Slot not found. The invite link may be invalid or expired.' });

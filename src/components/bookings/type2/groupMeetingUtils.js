@@ -4,7 +4,7 @@ function createLocalId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function getOptionId(option) {
+export function getGroupMeetingOptionId(option) {
   return option?._id || option?.id || '';
 }
 
@@ -18,6 +18,17 @@ function getTimeMinutes(value) {
 
 function sortBlocks(blocks) {
   return [...blocks].sort((firstBlock, secondBlock) => firstBlock.startTime.localeCompare(secondBlock.startTime));
+}
+
+function compareOptionTime(firstOption, secondOption) {
+  const firstKey = `${getDatePart(firstOption.date)}-${firstOption.startTime}-${firstOption.endTime}`;
+  const secondKey = `${getDatePart(secondOption.date)}-${secondOption.startTime}-${secondOption.endTime}`;
+
+  return firstKey.localeCompare(secondKey);
+}
+
+export function getGroupOptionVoteCount(option) {
+  return Array.isArray(option?.votes) ? option.votes.length : 0;
 }
 
 function flattenDateCards(dateCards) {
@@ -202,13 +213,31 @@ export function getSelectedGroupOptionId(group) {
     return '';
   }
 
-  return getOptionId(
+  return getGroupMeetingOptionId(
     (group.timeOptions || []).find((option) => (
       getDatePart(option.date) === getDatePart(group.selectedOption.date)
       && option.startTime === group.selectedOption.startTime
       && option.endTime === group.selectedOption.endTime
     ))
   );
+}
+
+export function getTopVotedGroupOption(options) {
+  const sortedOptions = (Array.isArray(options) ? options : [])
+    .filter((option) => getGroupMeetingOptionId(option))
+    .sort((firstOption, secondOption) => {
+      const voteDifference = getGroupOptionVoteCount(secondOption) - getGroupOptionVoteCount(firstOption);
+
+      if (voteDifference !== 0) {
+        return voteDifference;
+      }
+
+      return compareOptionTime(firstOption, secondOption);
+    });
+
+  const topOption = sortedOptions[0];
+
+  return topOption && getGroupOptionVoteCount(topOption) > 0 ? topOption : null;
 }
 
 export function sortDateCardTimeBlocks(dateCard) {
