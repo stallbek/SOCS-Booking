@@ -1,3 +1,5 @@
+// Authors: Emerson Lin,
+
 const { requireAuth, requireOwner } = require('../middleware/authMiddleware');
 
 const express = require('express');

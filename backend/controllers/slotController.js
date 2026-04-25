@@ -1,3 +1,5 @@
+// Authors: Emerson Lin,
+
 const Slot = require('../models/Slot');
 const User = require('../models/User');
 const { v4: uuidv4 } = require('uuid');
