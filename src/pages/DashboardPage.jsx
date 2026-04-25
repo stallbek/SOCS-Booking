@@ -5,6 +5,7 @@ import BookingTypeFilter from "../components/BookingTypeFilter";
 import PageHeader from "../components/PageHeader";
 import ScheduleCalendar from "../components/ScheduleCalendar";
 import SchedulePanel from "../components/SchedulePanel";
+import StudentSentRequestsPanel from "../components/bookings/type1/StudentSentRequestsPanel";
 import { useFeedback } from "../context/FeedbackContext";
 import { useSession } from "../context/SessionContext";
 import {
@@ -337,7 +338,9 @@ function DashboardPage() {
           />
 
           {!isOwner && (
-            <section className="dashboard-card">
+            <>
+              <StudentSentRequestsPanel />
+              <section className="dashboard-card">
               <div className="dashboard-card-head">
                 <div>
                   <p className="eyebrow">Teams</p>
@@ -378,6 +381,7 @@ function DashboardPage() {
                 </div>
               )}
             </section>
+            </>
           )}
         </div>
 

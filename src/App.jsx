@@ -3,6 +3,7 @@ import DashboardLayout from './layouts/DashboardLayout';
 import DashboardPage from './pages/DashboardPage';
 import OwnerAvailabilityPage from './pages/OwnerAvailabilityPage';
 import StudentOwnersPage from './pages/StudentOwnersPage';
+import PublicSlotPage from './pages/PublicSlotPage';
 import SignedInRoute from './routes/SignedInRoute';
 import WelcomeRoute from './routes/WelcomeRoute';
 import TeamsPage from './pages/TeamsPage';
@@ -16,6 +17,7 @@ function App() {
       <Route element={<WelcomeRoute mode={null} />} path="/" />
       <Route element={<WelcomeRoute mode="login" />} path="/login" />
       <Route element={<WelcomeRoute mode="register" />} path="/register" />
+      <Route element={<PublicSlotPage />} path="/booking" />
 
       <Route element={<SignedInRoute />}>
         <Route element={<DashboardLayout />} path="/app">
