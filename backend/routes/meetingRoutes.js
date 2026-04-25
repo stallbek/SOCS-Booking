@@ -13,7 +13,8 @@ const {
   voteOnGroupMeeting,
   getGroupMeetingByCode,
   finalizeGroupMeeting,
-  getMyGroups
+  getMyGroups,
+  deleteGroupMeeting
 } = require('../controllers/meetingController');
 
 const {
@@ -36,5 +37,6 @@ router.patch('/group/:code/vote', requireAuth, voteOnGroupMeeting); //User
 router.get('/group/:code', requireAuth, getGroupMeetingByCode); //User
 router.patch('/group/:code/finalize', requireOwner, finalizeGroupMeeting) //Owner
 router.get('/my-groups', requireOwner, getMyGroups) //Owner
+router.delete('/group/:id', requireOwner, deleteGroupMeeting) //Owner
 
 module.exports = router;
