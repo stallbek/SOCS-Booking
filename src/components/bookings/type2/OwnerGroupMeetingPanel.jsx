@@ -190,6 +190,20 @@ function OwnerGroupMeetingPanel() {
     });
   };
 
+  const handleDeleteGroupMeeting = async (groupId) => {
+    try {
+      await apiRequest(`/meetings/group/${groupId}`, 'DELETE');
+      await loadGroups();
+      notify({
+        message: 'Group meeting deleted.',
+        tone: 'success'
+      });
+    } catch (error) {
+      notify({
+        message: error.message || 'Failed to delete group meeting.',
+        tone: 'error'
+      });
+      
   const handleFinalizeGroup = async (group) => {
     const winningOption = getTopVotedGroupOption(group.timeOptions || []);
     const selectedOptionId = getGroupMeetingOptionId(winningOption);
@@ -449,7 +463,7 @@ function OwnerGroupMeetingPanel() {
                     </button>
                     <button
                       className="text-link booking-cancel-button"
-                      onClick={handleRemovePlaceholder}
+                      onClick={() => handleDeleteGroupMeeting(group._id)}
                       type="button"
                     >
                       Remove group meeting

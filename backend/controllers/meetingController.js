@@ -403,3 +403,37 @@ exports.getMyGroups = async (req, res) => {
     });
   }
 };
+
+// Delete group meeting (only before finalized)
+// DELETE /api/meetings/group/:id
+exports.deleteGroupMeeting = async (req, res) => {
+  try {
+    const group = await GroupMeeting.findOne({
+      _id: req.params.id,
+      owner: req.session.userId
+    });
+
+    if (!group) {
+      return res.status(404).json({
+        error: 'Group meeting not found.'
+      });
+    }
+
+    if (group.status === 'finalized') {
+      return res.status(400).json({
+        error: 'Cannot delete a finalized group meeting. Delete the created slots instead.'
+      });
+    }
+
+    await GroupMeeting.findByIdAndDelete(req.params.id);
+
+    res.json({
+      message: 'Group meeting deleted.'
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      error: 'Failed to delete group meeting.'
+    });
+  }
+};
