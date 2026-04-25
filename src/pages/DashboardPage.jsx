@@ -408,7 +408,11 @@ function DashboardPage() {
                 <span className="text-link">Email unavailable</span>
               )}
 
-              {event.isPast ? (
+              {!isOwner && event.bookingType === "type-2" ? (
+                <span className="booking-status-text">
+                  Scheduled
+                </span>
+              ) : event.isPast ? (
                 <span className="booking-status-text">
                   Completed
                 </span>
@@ -440,7 +444,7 @@ function DashboardPage() {
 
               <p>
                 {isOwner
-                  ? `Student: ${event.withName}`
+                  ? `${event.bookingType === "type-2" || event.bookingType === "type-3" ? "Attendees" : "Student"}: ${event.withName}`
                   : `Owner: ${event.withName}`}
               </p>
 

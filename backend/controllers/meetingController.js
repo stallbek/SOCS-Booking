@@ -317,6 +317,20 @@ exports.finalizeGroupMeeting = async (req, res) => {
       });
     }
 
+    const voterIds = [
+      ...new Set(
+        group.timeOptions.flatMap(o =>
+          o.votes.map(v => v.toString())
+        )
+      )
+    ];
+
+    if (!voterIds.length) {
+      return res.status(400).json({
+        error: 'At least one vote is required before finalizing.'
+      });
+    }
+
     group.selectedOption = {
       date: selectedOption.date,
       startTime: selectedOption.startTime,
@@ -344,21 +358,13 @@ exports.finalizeGroupMeeting = async (req, res) => {
         endTime: selectedOption.endTime,
         status: 'active',
         slotType: 'group',
+        attendees: voterIds,
         recurringGroupId: group._id.toString()
       });
     }
 
     await Slot.insertMany(slots);
     await group.save();
-
-    // Notify voters
-    const voterIds = [
-      ...new Set(
-        group.timeOptions.flatMap(o =>
-          o.votes.map(v => v.toString())
-        )
-      )
-    ];
 
     const voters = await User.find({
       _id: { $in: voterIds }

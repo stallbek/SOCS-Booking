@@ -37,6 +37,10 @@ const slotSchema = new mongoose.Schema({
     ref: 'User',
     default: null
   },
+  attendees: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   // For grouping recurring office hour slots together
   recurringGroupId: {
     type: String,
