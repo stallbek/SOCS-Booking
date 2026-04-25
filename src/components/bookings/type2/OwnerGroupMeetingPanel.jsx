@@ -202,7 +202,9 @@ function OwnerGroupMeetingPanel() {
       notify({
         message: error.message || 'Failed to delete group meeting.',
         tone: 'error'
-      });
+      })
+    }
+  };
       
   const handleFinalizeGroup = async (group) => {
     const winningOption = getTopVotedGroupOption(group.timeOptions || []);
