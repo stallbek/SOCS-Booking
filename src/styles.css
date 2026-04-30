@@ -953,6 +953,17 @@ h3 {
   gap: 0.7rem;
   align-items: center;
 }
+.notif-badge {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  background: red;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-weight: bold;
+}
 
 .auth-submit {
   width: 100%;

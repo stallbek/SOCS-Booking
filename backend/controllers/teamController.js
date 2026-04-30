@@ -1,8 +1,10 @@
+
 const TeamRequest = require('../models/TeamRequest');
 const User = require('../models/User');
 
 
 // GET all open team requests
+// GET /api/teams/
 exports.getAllTeams = async (req, res) => {
   try {
     const { course, search } = req.query;
@@ -31,6 +33,7 @@ exports.getAllTeams = async (req, res) => {
 };
 
 // GET my created requests
+// GET /api/teams/mine
 exports.getMyRequests = async (req, res) => {
   try {
     const requests = await TeamRequest.find({ creator: req.session.userId })
@@ -46,6 +49,7 @@ exports.getMyRequests = async (req, res) => {
 
 
 // GET my joined teams
+// GET /api/teams/joined
 exports.getMyTeams = async (req, res) => {
   try {
     const teams = await TeamRequest.find({ members: req.session.userId })
@@ -61,6 +65,7 @@ exports.getMyTeams = async (req, res) => {
 
 
 // CREATE team request
+// POST /api/teams/create
 exports.createTeam = async (req, res) => {
   try {
     const { courseNumber, teamName, description, maxMembers, skills } = req.body;
@@ -70,6 +75,11 @@ exports.createTeam = async (req, res) => {
         error: 'Course number, team name, and description are required.'
       });
     }
+    if (description.length > 200) {
+  return res.status(400).json({
+    error: 'Description must be under 200 characters.'
+  });
+}
 
     const request = new TeamRequest({
       creator: req.session.userId,
@@ -94,6 +104,7 @@ exports.createTeam = async (req, res) => {
 
 
 // JOIN team
+// POST /api/teams/:id/join
 exports.joinTeam = async (req, res) => {
   try {
     const request = await TeamRequest.findById(req.params.id);
@@ -116,6 +127,8 @@ exports.joinTeam = async (req, res) => {
     }
 
     await request.save();
+    request.hasUpdates = true;
+    request.lastActionBy = 'join';
 
     const creator = await User.findById(request.creator, 'email');
 
@@ -131,29 +144,42 @@ exports.joinTeam = async (req, res) => {
 
 
 // LEAVE team
+// DELETE /api/teams/:id/leave
 exports.leaveTeam = async (req, res) => {
   try {
     const request = await TeamRequest.findById(req.params.id);
 
     if (!request) return res.status(404).json({ error: 'Team not found.' });
 
-    if (request.creator.toString() === req.session.userId.toString()) {
-      return res.status(400).json({
-        error: 'Creator must delete instead of leaving.'
-      });
-    }
+    
+    const userId = req.session.userId;
 
+    // Remove user from members
     request.members = request.members.filter(
-      m => m.toString() !== req.session.userId.toString()
+      m => m.toString() !== userId.toString()
     );
 
+    // if there are no members left then delete the team
+    if (request.members.length === 0) {
+      await TeamRequest.deleteOne({ _id: request._id });
+
+      return res.json({
+        message: 'Team deleted (last member left).'
+      });
+    }
+    // if the creator of the team leaves, then transfer ownership of the team to someone else 
+   if (request.creator.toString() === userId.toString()) {
+      request.creator = request.members[0]; // promote first member
+    }
+    // Open space in the team if someone leaves
     if (request.members.length < request.maxMembers) {
       request.isOpen = true;
     }
-
+    
     await request.save();
-
-    res.json({ message: 'Left team.', request });
+    request.hasUpdates = true;
+    request.lastActionBy = 'leave';
+    res.json({ message: 'Left team successfully', request });
   } catch {
     res.status(500).json({ error: 'Failed to leave team.' });
   }
@@ -161,6 +187,7 @@ exports.leaveTeam = async (req, res) => {
 
 
 // REMOVE member (creator)
+// DELETE /api/teams/:id/remove/:userId
 exports.removeMember = async (req, res) => {
   try {
     const request = await TeamRequest.findOne({
@@ -190,8 +217,45 @@ exports.removeMember = async (req, res) => {
   }
 };
 
+// Update team
+// PUT /api/teams/:id
+exports.updateTeam = async (req, res) => {
+  try {
+    const { description, maxMembers, skills } = req.body;
 
-// DELETE team
+    const request = await TeamRequest.findOne({
+      _id: req.params.id,
+      creator: req.session.userId
+    });
+
+    if (!request) {
+      return res.status(403).json({ error: 'Not authorized.' });
+    }
+
+    if (description && description.length > 300) {
+      return res.status(400).json({ error: 'Description too long.' });
+    }
+
+    if (description) request.description = description.trim();
+    if (skills) request.skills = skills;
+    if (maxMembers) request.maxMembers = maxMembers;
+
+    await request.save();
+    request.hasUpdates = true;
+    request.lastActionBy = 'update';
+
+    res.json({
+      message: 'Team updated.',
+      request
+    });
+
+  } catch {
+    res.status(500).json({ error: 'Failed to update team.' });
+  }
+};
+
+// Delete team
+// DELETE /api/teams/:id/delete
 exports.deleteTeam = async (req, res) => {
   try {
     const request = await TeamRequest.findOne({

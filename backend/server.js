@@ -18,6 +18,7 @@ console.log("After DB");
 const slotRoutes = require('./routes/slotRoutes');
 const authRoutes = require('./routes/authRoutes');
 const meetingRoutes = require('./routes/meetingRoutes');
+const teamRoutes = require('./routes/teamRoutes');
 
 //creates Express application
 const app = express();
@@ -47,6 +48,7 @@ app.use(session({
 app.use('/api/auth', authRoutes);
 app.use('/api/slots', slotRoutes);
 app.use('/api/meetings', meetingRoutes);
+app.use('/api/teams', teamRoutes)
 
 // Serve the frontend build
 app.use(express.static(path.join(__dirname, '..', 'dist')));
@@ -56,7 +58,9 @@ app.use((req, res) => {
 });
 
 //use .env port if present, else 5000
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
+
+
 
 //starts the server
 app.listen(PORT, () => {

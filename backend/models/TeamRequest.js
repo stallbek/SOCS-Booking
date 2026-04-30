@@ -22,6 +22,7 @@ const teamRequestSchema = new mongoose.Schema({
   description: {
     type: String,
     required: true,
+    maxlength: 200,
     trim: true
   },
   maxMembers: {
@@ -29,6 +30,13 @@ const teamRequestSchema = new mongoose.Schema({
     default: 4,
     min: 2,
     max: 10
+  },
+  hasUpdates:{
+    type: Boolean,
+    default: false
+  },
+  lastActionBy: {
+    type : String
   },
   members: [{
     type: mongoose.Schema.Types.ObjectId,

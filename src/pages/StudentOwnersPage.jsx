@@ -76,9 +76,11 @@ function StudentOwnersPage() {
     setLoadingOwners(true);
 
     try {
+      console.log('Fetching /slots/public/owners');
       const data = await apiRequest('/slots/public/owners');
+      console.log('RAW API response', data);
       const nextOwners = Array.isArray(data) ? data : [];
-
+      console.log('Setting Owners', nextOwners.length, nextOwners[0]);
       setOwners(nextOwners);
       setSelectedOwnerId((currentValue) => {
         if (currentValue && nextOwners.some((owner) => (owner?._id || owner?.id || '') === currentValue)) {
@@ -88,6 +90,7 @@ function StudentOwnersPage() {
         return '';
       });
     } catch (error) {
+      console.error('loadOwners error:', error);
       notify({ message: error.message, tone: 'error' });
       setOwners([]);
       setSelectedOwnerId('');
