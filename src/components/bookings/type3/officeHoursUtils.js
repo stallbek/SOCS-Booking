@@ -52,8 +52,40 @@ function getTimeMinutes(value) {
   return (hours * 60) + minutes;
 }
 
+function hasValidTimeRange(option) {
+  return option.startTime && option.endTime && option.startTime < option.endTime;
+}
+
 function isDateBeforeToday(value) {
   return value && value < getDayKey(new Date());
+}
+
+function getSlotStartDate(dayKey, startTime) {
+  return new Date(`${dayKey}T${startTime}:00`);
+}
+
+function isFutureSlotStart(dayKey, startTime, now = new Date()) {
+  const startDate = getSlotStartDate(dayKey, startTime);
+  return Number.isFinite(startDate.getTime()) && startDate > now;
+}
+
+function getRecurringSlotDayKey(startDate, dayOfWeek, weekIndex) {
+  const weekStart = parseDateInput(startDate);
+  weekStart.setDate(weekStart.getDate() + weekIndex * 7);
+
+  const optionDate = new Date(weekStart);
+  const dayDiff = (Number(dayOfWeek) - optionDate.getDay() + 7) % 7;
+  optionDate.setDate(optionDate.getDate() + dayDiff);
+
+  return getDayKey(optionDate);
+}
+
+function toPayloadTimeOption(option, dayOfWeek) {
+  return {
+    dayOfWeek: Number(dayOfWeek),
+    startTime: option.startTime,
+    endTime: option.endTime
+  };
 }
 
 export function getSelectedBookingType(typeId) {
@@ -109,8 +141,10 @@ export function getTimeOptionKey(option) {
   return `${option.dayOfWeek}-${option.startTime}-${option.endTime}-${option.index}`;
 }
 
-export function countValidTimeBlocks(timeOptions) {
-  return timeOptions.filter((option) => option.startTime && option.endTime && option.startTime < option.endTime).length;
+export function countValidTimeBlocks(timeOptions, dateValue = '', now = new Date()) {
+  return timeOptions.filter((option) => (
+    hasValidTimeRange(option) && (!dateValue || isFutureSlotStart(dateValue, option.startTime, now))
+  )).length;
 }
 
 export function getSeriesEndDate(startDate, recurringWeeks) {
@@ -123,7 +157,7 @@ export function getSeriesEndDate(startDate, recurringWeeks) {
   return addDaysToDateInput(startDate, (weeks * 7) - 1);
 }
 
-export function countOfficeHourSlots(startDate, endDate, recurringWeeks, timeOptions) {
+export function countOfficeHourSlots(startDate, endDate, recurringWeeks, timeOptions, now = new Date()) {
   if (!startDate || !endDate || !recurringWeeks || !timeOptions.length) {
     return 0;
   }
@@ -147,7 +181,13 @@ export function countOfficeHourSlots(startDate, endDate, recurringWeeks, timeOpt
       const dayDiff = (Number(option.dayOfWeek) - optionDate.getDay() + 7) % 7;
       optionDate.setDate(optionDate.getDate() + dayDiff);
 
-      if (option.startTime < option.endTime && optionDate <= end) {
+      const optionDayKey = getDayKey(optionDate);
+
+      if (
+        hasValidTimeRange(option) &&
+        optionDate <= end &&
+        isFutureSlotStart(optionDayKey, option.startTime, now)
+      ) {
         count += 1;
       }
     });
@@ -210,6 +250,86 @@ export function buildOfficeHoursPayload(scheduleMode, officeHoursForm, timeOptio
   };
 }
 
+export function buildFutureOfficeHoursPayloads(scheduleMode, officeHoursForm, timeOptions, seriesEndDate, now = new Date()) {
+  const basePayload = {
+    title: officeHoursForm.title.trim(),
+    description: officeHoursForm.description.trim()
+  };
+
+  if (scheduleMode === 'recurring') {
+    const recurringWeeks = Number(officeHoursForm.recurringWeeks);
+    const payloadGroups = new Map();
+    let skippedCount = 0;
+
+    timeOptions.forEach((option) => {
+      if (!hasValidTimeRange(option)) {
+        return;
+      }
+
+      const firstSlotDayKey = getRecurringSlotDayKey(officeHoursForm.startDate, option.dayOfWeek, 0);
+      const firstSlotIsFuture = isFutureSlotStart(firstSlotDayKey, option.startTime, now);
+      const effectiveStartDate = firstSlotIsFuture
+        ? officeHoursForm.startDate
+        : addDaysToDateInput(officeHoursForm.startDate, 7);
+      const effectiveWeeks = firstSlotIsFuture ? recurringWeeks : recurringWeeks - 1;
+
+      if (!firstSlotIsFuture) {
+        skippedCount += 1;
+      }
+
+      if (effectiveWeeks < 1) {
+        return;
+      }
+
+      const groupKey = `${effectiveStartDate}-${effectiveWeeks}`;
+
+      if (!payloadGroups.has(groupKey)) {
+        payloadGroups.set(groupKey, {
+          startDate: effectiveStartDate,
+          recurringWeeks: effectiveWeeks,
+          timeOptions: []
+        });
+      }
+
+      payloadGroups.get(groupKey).timeOptions.push(toPayloadTimeOption(option, option.dayOfWeek));
+    });
+
+    const payloads = Array.from(payloadGroups.values()).map((group) => ({
+      ...basePayload,
+      startDate: group.startDate,
+      endDate: seriesEndDate,
+      recurringWeeks: group.recurringWeeks,
+      timeOptions: group.timeOptions
+    }));
+    const slotCount = payloads.reduce((total, payload) => (
+      total + countOfficeHourSlots(payload.startDate, payload.endDate, payload.recurringWeeks, payload.timeOptions, now)
+    ), 0);
+
+    return { payloads, skippedCount, slotCount };
+  }
+
+  const singleDayOfWeek = Number(getDateWeekdayValue(officeHoursForm.singleDate));
+  const futureTimeOptions = timeOptions.filter((option) => (
+    hasValidTimeRange(option) && isFutureSlotStart(officeHoursForm.singleDate, option.startTime, now)
+  ));
+  const skippedCount = timeOptions.filter(hasValidTimeRange).length - futureTimeOptions.length;
+  const payloads = futureTimeOptions.length
+    ? [{
+      ...basePayload,
+      startDate: officeHoursForm.singleDate,
+      endDate: officeHoursForm.singleDate,
+      recurringWeeks: 1,
+      timeOptions: futureTimeOptions.map((option) => toPayloadTimeOption(option, singleDayOfWeek))
+    }]
+    : [];
+
+  return {
+    payloads,
+    skippedCount,
+    slotCount: futureTimeOptions.length
+  };
+}
+
 export function getCreateValidationMessage(scheduleMode, officeHoursForm, timeOptions, slotPreviewCount) {
   if (!officeHoursForm.title.trim()) {
     return 'Add an office-hour title.';
@@ -249,7 +369,7 @@ export function getCreateValidationMessage(scheduleMode, officeHoursForm, timeOp
     }
   }
 
-  if (timeOptions.some((option) => !option.startTime || !option.endTime || option.startTime >= option.endTime)) {
+  if (timeOptions.some((option) => !hasValidTimeRange(option))) {
     return 'Each time block needs an end time after its start time.';
   }
 
@@ -288,9 +408,7 @@ export function getCreateValidationMessage(scheduleMode, officeHoursForm, timeOp
   }
 
   if (!slotPreviewCount) {
-    return scheduleMode === 'recurring'
-      ? 'The selected weekly pattern does not create any slots.'
-      : 'The selected single-date setup does not create any slots.';
+    return 'The selected OH times are already past.';
   }
 
   return '';

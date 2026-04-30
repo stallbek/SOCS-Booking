@@ -1,5 +1,5 @@
 //Stalbek Ulanbek uulu 261102435
-import { formatLongDate, parseDayKey } from '../../../utils/date';
+import { formatLongDate, getDayKey, parseDayKey } from '../../../utils/date';
 import { getCustomDateSummary } from './officeHoursUtils';
 
 function OfficeHoursDetailsFields({
@@ -10,6 +10,8 @@ function OfficeHoursDetailsFields({
   scheduleMode,
   seriesEndDate
 }) {
+  const todayKey = getDayKey(new Date());
+
   return (
     <div className="calendar-compose-top">
       <div className="office-hours-mode-toggle" aria-label="Office hour type">
@@ -48,6 +50,7 @@ function OfficeHoursDetailsFields({
           <label className="form-field">
             <span>First week starts</span>
             <input
+              min={todayKey}
               name="startDate"
               onChange={(event) => onFieldChange(event.target.name, event.target.value)}
               type="date"
@@ -78,6 +81,7 @@ function OfficeHoursDetailsFields({
           <label className="form-field">
             <span>Office-hour date</span>
             <input
+              min={todayKey}
               name="singleDate"
               onChange={(event) => onFieldChange(event.target.name, event.target.value)}
               type="date"

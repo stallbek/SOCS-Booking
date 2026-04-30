@@ -29,7 +29,7 @@ import {
   createTimeOption
 } from '../components/bookings/type3/officeHoursConfig';
 import {
-  buildOfficeHoursPayload,
+  buildFutureOfficeHoursPayloads,
   countOfficeHourSlots,
   countSlotsBySeries,
   countValidTimeBlocks,
@@ -197,7 +197,7 @@ function OwnerAvailabilityPage() {
       );
     }
 
-    return officeHoursForm.singleDate ? countValidTimeBlocks(timeOptions) : 0;
+    return officeHoursForm.singleDate ? countValidTimeBlocks(timeOptions, officeHoursForm.singleDate) : 0;
   }, [
     isRecurring,
     officeHoursForm.recurringWeeks,
@@ -326,11 +326,20 @@ function OwnerAvailabilityPage() {
     setSaving(true);
 
     try {
-      const data = await apiRequest(
-        '/slots/office-hours/create',
-        'POST',
-        buildOfficeHoursPayload(scheduleMode, officeHoursForm, timeOptions, seriesEndDate)
-      );
+      const futureSlots = buildFutureOfficeHoursPayloads(scheduleMode, officeHoursForm, timeOptions, seriesEndDate);
+
+      if (!futureSlots.slotCount) {
+        setFormFeedback('The selected OH times are already past.');
+        setSaving(false);
+        return;
+      }
+
+      let createdCount = 0;
+
+      for (const payload of futureSlots.payloads) {
+        const data = await apiRequest('/slots/office-hours/create', 'POST', payload);
+        createdCount += data.slotsCreated || 0;
+      }
 
       setOfficeHoursForm((currentValues) => ({
         ...currentValues,
@@ -339,8 +348,11 @@ function OwnerAvailabilityPage() {
       }));
       setTimeOptions([]);
       await loadSlots();
+      const skippedMessage = futureSlots.skippedCount
+        ? ` Skipped ${futureSlots.skippedCount} past slot${futureSlots.skippedCount === 1 ? '' : 's'}.`
+        : '';
       notify({
-        message: `Created ${data.slotsCreated || slotPreviewCount} office-hour slots.`,
+        message: `Created ${createdCount || futureSlots.slotCount} office-hour slots.${skippedMessage}`,
         tone: 'success'
       });
     } catch (error) {
