@@ -2,8 +2,9 @@
 import { useEffect, useState, useMemo } from 'react';
 import { apiRequest } from '../api/api';
 import PageHeader from '../components/PageHeader';
-import { useSession } from '../context/SessionContext';
+import { SessionProvider, useSession} from '../context/SessionContext';
 import { Link, useNavigate } from 'react-router-dom';
+import ConfirmDialog from '../components/feedback/ConfirmDialog';
 
 function mapTeamToEvent(team) {
   return {
@@ -20,7 +21,7 @@ function mapTeamToEvent(team) {
 }
 
 function TeamsPage() {
-  const { currentUser, loading } = useSession();
+  const { currentUser, loading, refreshNotifications } = useSession();
   const navigate = useNavigate();
   const [teams, setTeams] = useState([]);
   const [teamsLoading, setTeamsLoading] = useState(true);
@@ -58,17 +59,17 @@ function TeamsPage() {
 
   const handleJoin = async (id) => {
     try {
-      await apiRequest(`/teams/${id}/join`, 'POST');
+      const res = await apiRequest(`/teams/${id}/join`, 'POST');
+      console.log("Join response:", res);
 
       setFeedback('Joined team!');
 
-      setTeams((prev) =>
-        prev.map((t) =>
-          t._id === id
-            ? { ...t, members: [...(t.members || []), currentUser] }
-            : t
+      setTeams(prev =>
+        prev.map(t =>
+          t._id === id ? res.request : t
         )
       );
+      refreshNotifications();
     } catch (err) {
       setFeedback(err.message);
     }
@@ -79,6 +80,7 @@ function TeamsPage() {
     try {
       await apiRequest(`/teams/${id}`, 'DELETE');
       setTeams(prev => prev.filter(t => t._id !== id));
+      refreshNotifications();
     } catch (err) {
       setFeedback(err.message);
     }
@@ -86,7 +88,7 @@ function TeamsPage() {
 
   const handleLeave = async (id) => {
     try {
-      await apiRequest(`/teams/${id}/leave`, 'DELETE');
+      const res = await apiRequest(`/teams/${id}/leave`, 'DELETE');
 
       setFeedback('Left team');
       if (!res.request) {
@@ -99,11 +101,14 @@ function TeamsPage() {
           t._id === id ? res.request : t
         )
       );
+      refreshNotifications();
 
     } catch (err) {
       setFeedback(err.message);
     }
   };
+
+
 
   return (
 
@@ -148,7 +153,7 @@ function TeamsPage() {
               const isMember = team.members.some(
                 m => (m._id || m).toString() === userId
               );
-             
+
               return (
                 <article className="dashboard-event-row" key={team.id}>
 
@@ -190,10 +195,11 @@ function TeamsPage() {
 
                     {isCreator && (
                       <>
-                        <button className="text-link" onClick={() => {console.log("Edit Clicked",`/app/teams/edit/${team.id}`);navigate(`/app/teams/edit/${team.id}`)}}>
+                        <button className="text-link" onClick={() => { console.log("Edit Clicked", `/app/teams/edit/${team.id}`); navigate(`/app/teams/edit/${team.id}`) }}>
                           Edit
                         </button>
-                        <button className="text-link" onClick={() => {console.log("Delete Clicked");
+                        <button className="text-link" onClick={() => {
+                          console.log("Delete Clicked");
                           setConfirmation({
                             title: "Delete team?",
                             message: "This action cannot be undone.",
@@ -222,6 +228,14 @@ function TeamsPage() {
         )}
 
       </section>
+      <ConfirmDialog
+        confirmation={confirmation}
+        onCancel={() => setConfirmation(null)}
+        onConfirm={() => {
+          confirmation?.action?.();
+          setConfirmation(null);
+        }}
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
-const AUTH_API_BASE_URL = 'http://localhost:5001/api/auth' //'/api/auth';
+const AUTH_API_BASE_URL = '/api/auth';
 
 
 //context used to share session data
@@ -174,7 +174,7 @@ function SessionProvider({ children }) {
 });
 const refreshNotifications = async () => {
   try {
-    const res = await fetch('http://localhost:5001/api/meetings/notifications/count', {
+    const res = await fetch('/api/meetings/notifications/count', {
       credentials: 'include',
       cache: 'no-store'
     });

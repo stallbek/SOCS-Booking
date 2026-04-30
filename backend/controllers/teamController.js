@@ -1,4 +1,5 @@
 //Ananya Krishnakumar 261024261
+const { request } = require('express');
 const TeamRequest = require('../models/TeamRequest');
 const User = require('../models/User');
 
@@ -189,12 +190,13 @@ exports.leaveTeam = async (req, res) => {
 // REMOVE member (creator)
 // DELETE /api/teams/:id/remove/:userId
 exports.removeMember = async (req, res) => {
+  
   try {
     const request = await TeamRequest.findOne({
-      id: req.params.id,
+      _id: req.params.id,
       creator: req.session.userId
     });
-
+    console.log("Team Query Result:", request);
     if (!request) {
       return res.status(404).json({ error: 'Not authorized.' });
     }
@@ -224,7 +226,7 @@ exports.updateTeam = async (req, res) => {
     const { description, maxMembers, skills } = req.body;
 
     const request = await TeamRequest.findOne({
-      id: req.params.id,
+      _id: req.params.id,
       creator: req.session.userId
     });
 
@@ -260,7 +262,7 @@ exports.deleteTeam = async (req, res) => {
   console.log("Delete team route hit");
   try {
     const request = await TeamRequest.findOne({
-      id: req.params.id,
+      _id: req.params.id,
       creator: req.session.userId
     }).populate('members', 'email');
 
