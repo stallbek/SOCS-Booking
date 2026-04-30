@@ -332,7 +332,8 @@ exports.getMyBookings = async (req, res) => {
 exports.getPublicOwners = async (req, res) => {
   try {
     const ownersWithSlots = await Slot.distinct('owner', { status: 'active' });
-    const owners = await User.find({ _id: { $in: ownersWithSlots }, role: 'owner' }, 'name email');
+   const owners = await User.find({ role: 'owner' }, 'name email');
+    // const owners = await User.find({ _id: { $in: ownersWithSlots }, role: 'owner' }, 'name email');
 
     res.json(owners);
   } catch (error) {

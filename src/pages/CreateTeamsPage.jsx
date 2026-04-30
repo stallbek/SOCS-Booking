@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { apiRequest } from '../api/api';
 import PageHeader from '../components/PageHeader';
-
+import { useNavigate, Link } from 'react-router-dom';
 function CreateTeamPage() {
   const [form, setForm] = useState({
     courseNumber: '',
@@ -13,11 +13,10 @@ function CreateTeamPage() {
 
   const [feedback, setFeedback] = useState('');
   const [loading, setLoading] = useState(false);
-
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
-
+  const navigate = useNavigate();
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFeedback('');
@@ -60,6 +59,11 @@ function CreateTeamPage() {
             <p className="eyebrow">Team details</p>
             <h2>Create request</h2>
           </div>
+
+           <Link
+            to="/app/teams"
+            className="button button-primary"
+          > View All Teams</Link>
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
@@ -76,7 +80,8 @@ function CreateTeamPage() {
 
           <label className="form-field">
             <span>Description</span>
-            <textarea name="description" value={form.description} onChange={handleChange} />
+            <textarea name="description" maxLength={200} value={form.description} onChange={handleChange} />
+
           </label>
 
           <label className="form-field">

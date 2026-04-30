@@ -9,25 +9,23 @@ const {
   joinTeam,
   leaveTeam,
   removeMember,
-  deleteTeam
+  deleteTeam,
+  updateTeam
 } = require('../controllers/teamController');
 
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/authMiddleware.js');
 
-// GET
+
 router.get('/', requireAuth, getAllTeams);
 router.get('/my-requests', requireAuth, getMyRequests);
 router.get('/my-teams', requireAuth, getMyTeams);
+router.put('/:id', requireAuth, updateTeam)
 
-// POST
 router.post('/', requireAuth, createTeam);
+router.post('/:id/join', requireAuth, joinTeam);
 
-// PATCH
-router.patch('/:id/join', requireAuth, joinTeam);
-router.patch('/:id/leave', requireAuth, leaveTeam);
-router.patch('/:id/remove/:userId', requireAuth, removeMember);
-
-// DELETE
 router.delete('/:id', requireAuth, deleteTeam);
+router.delete('/:id/leave', requireAuth, leaveTeam);
+router.delete('/:id/remove/:userId', requireAuth, removeMember);
 
 module.exports = router;

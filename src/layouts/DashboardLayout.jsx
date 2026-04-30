@@ -18,7 +18,7 @@ const studentNavItems = [
 
 function DashboardLayout() {
   const navigate = useNavigate();
-  const { currentUser, logout } = useSession();
+  const { currentUser, logout, notifications } = useSession();
   const navItems = currentUser.role === 'owner' ? ownerNavItems : studentNavItems;
 
   const handleLogout = async () => {
@@ -34,8 +34,31 @@ function DashboardLayout() {
         <nav aria-label="Dashboard" className="app-nav">
           {navItems.map((item) => (
             item.to ? (
-              <NavLink className={({ isActive }) => `app-nav-link${isActive ? ' app-nav-link-active' : ''}`} key={item.label} to={item.to}>
-                {item.label}
+              <NavLink
+                className={({ isActive }) => `app-nav-link${isActive ? ' app-nav-link-active' : ''}`}
+                key={item.label}
+                to={item.to}
+              >
+                <span style={{ position: 'relative', display: 'inline-block' }}>
+                  {item.label}
+
+                  {/* Owner: Availability → incoming requests */}
+                  {currentUser.role === 'owner' &&
+                    item.label === 'Availability' &&
+                    (notifications.owner > 0 )&& (
+                      <span className="notif-badge">
+                        {notifications.owner}
+                      </span>
+                    )}
+
+                  {/* Student (and owner-as-sender): My Bookings → responses */}
+                  {item.label === 'My Bookings' &&
+                    notifications.user > 0 && (
+                      <span className="notif-badge">
+                        {notifications.user}
+                      </span>
+                    )}
+                </span>
               </NavLink>
             ) : (
               <span className="app-nav-label" key={item.label}>

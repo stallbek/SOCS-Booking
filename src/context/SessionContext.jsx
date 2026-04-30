@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
-const AUTH_API_BASE_URL = '/api/auth';
+const AUTH_API_BASE_URL = 'http://localhost:5001/api/auth'//'/api/auth';
 
 //context used to share session data
 const SessionContext = createContext(null);
@@ -33,6 +33,7 @@ function SessionProvider({ children }) {
 
         //save logged in user
         setCurrentUser(data.user);
+        refreshNotifications();
 
       } catch (error) {
 
@@ -126,7 +127,7 @@ function SessionProvider({ children }) {
 
       //save logged in user after successful register
       setCurrentUser(data.user);
-
+      refreshNotifications();
       return {
         success: true,
         user: data.user
@@ -154,6 +155,31 @@ function SessionProvider({ children }) {
     setCurrentUser(null);
   };
 
+  // For notification badges
+  const [notifications, setNotifications] = useState({
+  owner: 0,
+  user: 0
+});
+const refreshNotifications = async () => {
+  try {
+    const res = await fetch('/api/notifications/count', {
+      credentials: 'include'
+    });
+
+    if (!res.ok) return;
+
+    const data = await res.json();
+
+    setNotifications({
+      owner: data.ownerNotifications,
+      user: data.userNotifications
+    });
+
+  } catch (err) {
+    console.error(err);
+  }
+};
+
   return (
     <SessionContext.Provider
       value={{
@@ -161,7 +187,9 @@ function SessionProvider({ children }) {
         loading,
         login,
         register,
-        logout
+        logout,
+        notifications,
+        refreshNotifications
       }}
     >
       {children}

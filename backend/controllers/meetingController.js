@@ -5,9 +5,8 @@ const Slot = require('../models/Slot');
 const User = require('../models/User');
 
 
-// ═══════════════════════════════════════════
+
 // TYPE 1 – REQUEST MEETINGS
-// ═══════════════════════════════════════════
 
 // Send meeting request
 exports.sendMeetingRequest = async (req, res) => {
@@ -17,7 +16,9 @@ exports.sendMeetingRequest = async (req, res) => {
       message,
       preferredDate,
       preferredStartTime,
-      preferredEndTime
+      preferredEndTime,
+      isReadByOwner,
+      isReadBySender
     } = req.body;
 
     if (!toOwnerId || !message || !preferredDate || !preferredStartTime || !preferredEndTime) {
@@ -53,8 +54,14 @@ exports.sendMeetingRequest = async (req, res) => {
 
 
 // Get incoming requests for owner
+// GET /api/meetings
 exports.getMeetingRequests = async (req, res) => {
   try {
+    // After fetching requests
+    await MeetingRequest.updateMany(
+      { toOwner: req.session.userId, isReadByOwner: false },
+      { $set: { isReadByOwner: true } }
+    );
     const requests = await MeetingRequest.find({
       toOwner: req.session.userId
     })
@@ -99,6 +106,7 @@ exports.acceptMeetingRequest = async (req, res) => {
     await slot.save();
 
     request.status = 'accepted';
+    request.isReadBySender = false;
     request.createdSlot = slot._id;
     await request.save();
 
@@ -130,6 +138,7 @@ exports.declineMeetingRequest = async (req, res) => {
     }
 
     request.status = 'declined';
+    request.isReadBySender = false;
     await request.save();
 
     res.json({
@@ -143,9 +152,14 @@ exports.declineMeetingRequest = async (req, res) => {
 };
 
 
-// My sent requests
+// Get current User's requests
+// GET /api/meetings/my-requests
 exports.getMyMeetingRequests = async (req, res) => {
   try {
+    await MeetingRequest.updateMany(
+  { fromUser: req.session.userId, isReadBySender: false },
+  { $set: { isReadBySender: true } }
+);
     const requests = await MeetingRequest.find({
       fromUser: req.session.userId
     })
@@ -159,11 +173,40 @@ exports.getMyMeetingRequests = async (req, res) => {
   }
 };
 
+//For notification badges to notify the user
+// GET /api/notifications/count
+exports.getNotificationCounts = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const role = req.session.role;
+
+    let ownerCount = 0;
+    let userCount = 0;
+
+    if (role === 'owner') {
+      ownerCount = await MeetingRequest.countDocuments({
+        toOwner: userId,
+        isReadByOwner: false
+      });
+    }
+
+    userCount = await MeetingRequest.countDocuments({
+      fromUser: userId,
+      isReadBySender: false
+    });
+
+    res.json({
+      ownerNotifications: ownerCount,
+      userNotifications: userCount
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch notifications' });
+  }
+};
 
 
-// ═══════════════════════════════════════════
 // TYPE 2 – GROUP MEETINGS
-// ═══════════════════════════════════════════
 
 // Create group meeting
 // 
@@ -317,6 +360,20 @@ exports.finalizeGroupMeeting = async (req, res) => {
       });
     }
 
+    const voterIds = [
+      ...new Set(
+        group.timeOptions.flatMap(o =>
+          o.votes.map(v => v.toString())
+        )
+      )
+    ];
+
+    if (!voterIds.length) {
+      return res.status(400).json({
+        error: 'At least one vote is required before finalizing.'
+      });
+    }
+
     group.selectedOption = {
       date: selectedOption.date,
       startTime: selectedOption.startTime,
@@ -344,21 +401,13 @@ exports.finalizeGroupMeeting = async (req, res) => {
         endTime: selectedOption.endTime,
         status: 'active',
         slotType: 'group',
+        attendees: voterIds,
         recurringGroupId: group._id.toString()
       });
     }
 
     await Slot.insertMany(slots);
     await group.save();
-
-    // Notify voters
-    const voterIds = [
-      ...new Set(
-        group.timeOptions.flatMap(o =>
-          o.votes.map(v => v.toString())
-        )
-      )
-    ];
 
     const voters = await User.find({
       _id: { $in: voterIds }

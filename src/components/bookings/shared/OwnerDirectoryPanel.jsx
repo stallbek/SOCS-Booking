@@ -12,7 +12,7 @@ function OwnerDirectoryPanel({
   ownerSearch,
   owners,
   selectedOwnerId
-}) {
+})  {
   return (
     <LookupPanel
       eyebrow="Search owners"
