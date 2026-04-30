@@ -1,5 +1,5 @@
 //Type 1 - Meeting request from user to owner (accept or decline)
-// Author: Ananya Krishnakumar
+// Ananya Krishnakumar
 
 const mongoose = require('mongoose');
 
@@ -41,6 +41,14 @@ const meetingRequestSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Slot',
     default: null
+  },
+  isReadByOwner: {
+    type: Boolean,
+    default: false
+  },
+  isReadBySender: {
+    type: Boolean,
+    default: false
   }
 }, { timestamps: true });
 

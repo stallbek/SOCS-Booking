@@ -7,6 +7,7 @@ import SignedInRoute from './routes/SignedInRoute';
 import WelcomeRoute from './routes/WelcomeRoute';
 import TeamsPage from './pages/TeamsPage';
 import CreateTeamPage from './pages/CreateTeamsPage';
+import EditTeamPage from './pages/EditTeamsPage';
 
 //Stalbek Ulanbek uulu 261102435
 
@@ -25,6 +26,7 @@ function App() {
           <Route element={<StudentOwnersPage />} path="owners" />
           <Route element={<TeamsPage />} path="teams" />
           <Route element={<CreateTeamPage />} path="teams/create" />
+          <Route element={<EditTeamPage />} path="teams/edit/:id" />
         </Route>
       </Route>
 

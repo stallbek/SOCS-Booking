@@ -1,3 +1,4 @@
+// Ananya Krishnakumar 261024261
 import { useEffect, useState, useMemo } from 'react';
 import { apiRequest } from '../api/api';
 import PageHeader from '../components/PageHeader';
@@ -7,7 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 function mapTeamToEvent(team) {
   return {
     id: team._id,
-    creator: team.creator?._id,
+    creator: team.creator?._id || team.creator,
     title: team.teamName,
     subtitle: team.courseNumber,
     description: team.description,
@@ -19,13 +20,22 @@ function mapTeamToEvent(team) {
 }
 
 function TeamsPage() {
-  const { currentUser } = useSession();
+  const { currentUser, loading } = useSession();
   const navigate = useNavigate();
   const [teams, setTeams] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [teamsLoading, setTeamsLoading] = useState(true);
   const [feedback, setFeedback] = useState('');
-  const userId = currentUser?._id
+  const [confirmation, setConfirmation] = useState(null);
+  const userId = currentUser?.id?.toString();
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  //console.log("CURRENT USER:", currentUser);
   useEffect(() => {
+    if (!currentUser) {
+      return <div>Please log in</div>;
+    }
     const loadTeams = async () => {
       try {
         const data = await apiRequest('/teams');
@@ -34,12 +44,12 @@ function TeamsPage() {
         setFeedback(err.message);
         setTeams([]);
       } finally {
-        setLoading(false);
+        setTeamsLoading(false);
       }
     };
 
     loadTeams();
-  }, []);
+  }, [currentUser]);
 
   const events = useMemo(
     () => teams.map(mapTeamToEvent),
@@ -64,21 +74,29 @@ function TeamsPage() {
     }
   };
 
+  const handleDelete = async (id) => {
+    console.log("Delete hit");
+    try {
+      await apiRequest(`/teams/${id}`, 'DELETE');
+      setTeams(prev => prev.filter(t => t._id !== id));
+    } catch (err) {
+      setFeedback(err.message);
+    }
+  };
+
   const handleLeave = async (id) => {
     try {
       await apiRequest(`/teams/${id}/leave`, 'DELETE');
 
       setFeedback('Left team');
-
+      if (!res.request) {
+        setTeams(prev => prev.filter(t => t._id !== id));
+        return;
+      }
 
       setTeams(prev =>
         prev.map(t =>
-          t._id === id
-            ? {
-              ...t,
-              members: t.members.filter(m => m._id !== currentUser._id)
-            }
-            : t
+          t._id === id ? res.request : t
         )
       );
 
@@ -115,7 +133,7 @@ function TeamsPage() {
           <div className="auth-notice">{feedback}</div>
         ) : null}
 
-        {loading ? (
+        {teamsLoading ? (
           <div className="dashboard-empty-state">
             <h3>Loading</h3>
             <p>Fetching teams...</p>
@@ -126,8 +144,11 @@ function TeamsPage() {
 
 
             {events.map((team) => {
-              const isCreator = team.creator === userId;
-              const isMember = team.members.some(m => m._id === userId);
+              const isCreator = team.creator?.toString() === userId;
+              const isMember = team.members.some(
+                m => (m._id || m).toString() === userId
+              );
+             
               return (
                 <article className="dashboard-event-row" key={team.id}>
 
@@ -155,15 +176,33 @@ function TeamsPage() {
                     )}
 
                     {isMember && !isCreator && (
-                      <button className="text-link" onClick={() => handleLeave(team.id)}>Leave</button>
+                      <button className="text-link" onClick={() =>
+                        setConfirmation({
+                          title: "Leave team?",
+                          message: "You will be removed from this team.",
+                          confirmLabel: "Leave",
+                          cancelLabel: "Cancel",
+                          tone: "danger",
+                          action: () => handleLeave(team.id)
+                        })
+                      }>Leave</button>
                     )}
 
                     {isCreator && (
                       <>
-                        <button className="text-link" onClick={() => navigate(`/app/teams/edit/${team.id}`)}>
+                        <button className="text-link" onClick={() => {console.log("Edit Clicked",`/app/teams/edit/${team.id}`);navigate(`/app/teams/edit/${team.id}`)}}>
                           Edit
                         </button>
-                        <button className="text-link"  onClick={() => handleDelete(team.id)}>
+                        <button className="text-link" onClick={() => {console.log("Delete Clicked");
+                          setConfirmation({
+                            title: "Delete team?",
+                            message: "This action cannot be undone.",
+                            confirmLabel: "Delete",
+                            cancelLabel: "Cancel",
+                            tone: "danger",
+                            action: () => handleDelete(team.id)
+                          })
+                        }}>
                           Delete
                         </button>
                       </>

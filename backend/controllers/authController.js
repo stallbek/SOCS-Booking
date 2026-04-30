@@ -1,3 +1,4 @@
+//Ananya Krishnakumar 261024261
 const User = require('../models/User');
 
 // Register user
@@ -37,7 +38,7 @@ exports.registerUser = async (req, res) => {
     res.status(201).json({
       message: 'Registration successful!',
       user: {
-        id: user._id,
+        _id: user._id,
         name: user.name,
         email: user.email,
         role: user.role

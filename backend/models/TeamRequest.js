@@ -1,5 +1,5 @@
 //Optional Feature: McGill Tinder - Team finding tool for project groups 
-// Author: Ananya Krishnakumar
+//Ananya Krishnakumar 261024261
 
 const mongoose = require('mongoose');
 

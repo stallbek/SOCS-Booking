@@ -1,4 +1,4 @@
-// Authors: Emerson Lin,
+// Authors: Emerson Lin, Ananya Krishnakumar 261024261
 
 const Slot = require('../models/Slot');
 const User = require('../models/User');
@@ -360,7 +360,7 @@ exports.getOwnerPublicSlots = async (req, res) => {
       .sort({ date: 1 });
 
     res.json({
-      owner: { id: owner._id, name: owner.name, email: owner.email },
+      owner: { _id: owner._id, name: owner.name, email: owner.email },
       slots
     });
   } catch (error) {
@@ -387,7 +387,7 @@ exports.getSlotByInviteCode = async (req, res) => {
 
     res.json({
       slot,
-      owner: { id: slot.owner._id, name: slot.owner.name, email: slot.owner.email },
+      owner: { _id: slot.owner._id, name: slot.owner.name, email: slot.owner.email },
       isAvailable: !slot.bookedBy
     });
   } catch (error) {

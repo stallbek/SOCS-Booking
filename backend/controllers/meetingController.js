@@ -157,9 +157,9 @@ exports.declineMeetingRequest = async (req, res) => {
 exports.getMyMeetingRequests = async (req, res) => {
   try {
     await MeetingRequest.updateMany(
-  { fromUser: req.session.userId, isReadBySender: false },
-  { $set: { isReadBySender: true } }
-);
+      { fromUser: req.session.userId, isReadBySender: false },
+      { $set: { isReadBySender: true } }
+    );
     const requests = await MeetingRequest.find({
       fromUser: req.session.userId
     })
@@ -176,14 +176,21 @@ exports.getMyMeetingRequests = async (req, res) => {
 //For notification badges to notify the user
 // GET /api/notifications/count
 exports.getNotificationCounts = async (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({
+      ownerNotifications: 0,
+      userNotifications: 0
+    });
+  }
   try {
+
     const userId = req.session.userId;
-    const role = req.session.role;
+    const userRole = req.session.userRole;
 
     let ownerCount = 0;
     let userCount = 0;
 
-    if (role === 'owner') {
+    if (userRole === 'owner') {
       ownerCount = await MeetingRequest.countDocuments({
         toOwner: userId,
         isReadByOwner: false
@@ -201,7 +208,9 @@ exports.getNotificationCounts = async (req, res) => {
     });
 
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch notifications' });
+    res.status(500).json({  ownerNotifications: 0,
+      userNotifications: 0,
+      error: 'Failed to fetch notifications' });
   }
 };
 

@@ -2,13 +2,17 @@
 
 const express = require('express');
 const router = express.Router();
-
+router.use((req, res, next) => {
+  console.log("INSIDE meetingRoutes:", req.method, req.url);
+  next();
+});
 const {
   sendMeetingRequest,
   getMeetingRequests,
   acceptMeetingRequest,
   declineMeetingRequest,
   getMyMeetingRequests,
+  getNotificationCounts,
   createGroupMeeting,
   voteOnGroupMeeting,
   getGroupMeetingByCode,
@@ -29,7 +33,7 @@ router.get('/requests', requireOwner, getMeetingRequests);// Owner
 router.patch('/request/:id/accept', requireOwner, acceptMeetingRequest); // Owner
 router.patch('/request/:id/decline', requireOwner, declineMeetingRequest); //Owner
 router.get('/my-requests', requireAuth, getMyMeetingRequests); // User
-
+router.get('/notifications/count',requireAuth, getNotificationCounts); // For Owner and User
 
 // TYPE 2
 router.post('/group', requireOwner, createGroupMeeting);//Owner

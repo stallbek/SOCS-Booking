@@ -52,7 +52,7 @@ function DashboardLayout() {
                     )}
 
                   {/* Student (and owner-as-sender): My Bookings → responses */}
-                  {item.label === 'My Bookings' &&
+                  {item.label === 'Bookings' &&
                     notifications.user > 0 && (
                       <span className="notif-badge">
                         {notifications.user}

@@ -1,4 +1,4 @@
-
+//Ananya Krishnakumar 261024261
 const TeamRequest = require('../models/TeamRequest');
 const User = require('../models/User');
 
@@ -22,8 +22,8 @@ exports.getAllTeams = async (req, res) => {
     }
 
     const requests = await TeamRequest.find(filter)
-      .populate('creator', 'name email')
-      .populate('members', 'name email')
+      .populate('creator', '_id name email')
+      .populate('members', '_id name email')
       .sort({ createdAt: -1 });
 
     res.json(requests);
@@ -125,10 +125,10 @@ exports.joinTeam = async (req, res) => {
     if (request.members.length >= request.maxMembers) {
       request.isOpen = false;
     }
-
-    await request.save();
     request.hasUpdates = true;
     request.lastActionBy = 'join';
+    await request.save();
+    
 
     const creator = await User.findById(request.creator, 'email');
 
@@ -175,10 +175,10 @@ exports.leaveTeam = async (req, res) => {
     if (request.members.length < request.maxMembers) {
       request.isOpen = true;
     }
-    
-    await request.save();
     request.hasUpdates = true;
     request.lastActionBy = 'leave';
+    await request.save();
+    
     res.json({ message: 'Left team successfully', request });
   } catch {
     res.status(500).json({ error: 'Failed to leave team.' });
@@ -191,7 +191,7 @@ exports.leaveTeam = async (req, res) => {
 exports.removeMember = async (req, res) => {
   try {
     const request = await TeamRequest.findOne({
-      _id: req.params.id,
+      id: req.params.id,
       creator: req.session.userId
     });
 
@@ -224,7 +224,7 @@ exports.updateTeam = async (req, res) => {
     const { description, maxMembers, skills } = req.body;
 
     const request = await TeamRequest.findOne({
-      _id: req.params.id,
+      id: req.params.id,
       creator: req.session.userId
     });
 
@@ -257,9 +257,10 @@ exports.updateTeam = async (req, res) => {
 // Delete team
 // DELETE /api/teams/:id/delete
 exports.deleteTeam = async (req, res) => {
+  console.log("Delete team route hit");
   try {
     const request = await TeamRequest.findOne({
-      _id: req.params.id,
+      id: req.params.id,
       creator: req.session.userId
     }).populate('members', 'email');
 
@@ -277,5 +278,22 @@ exports.deleteTeam = async (req, res) => {
     });
   } catch {
     res.status(500).json({ error: 'Failed to delete team.' });
+  }
+};
+//Get the teams by id 
+//GET /api/teams/:id
+exports.getTeamById = async (req, res) => {
+  try {
+    const team = await TeamRequest.findById(req.params.id)
+      .populate('creator', '_id name email')
+      .populate('members', '_id name email');
+
+    if (!team) {
+      return res.status(404).json({ error: 'Team not found' });
+    }
+
+    res.json(team);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch team' });
   }
 };

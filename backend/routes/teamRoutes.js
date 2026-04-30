@@ -1,3 +1,4 @@
+// Ananya Krishnakumar 261024261
 const express = require('express');
 const router = express.Router();
 
@@ -5,6 +6,7 @@ const {
   getAllTeams,
   getMyRequests,
   getMyTeams,
+  getTeamById,
   createTeam,
   joinTeam,
   leaveTeam,
@@ -19,6 +21,7 @@ const { requireAuth } = require('../middleware/authMiddleware.js');
 router.get('/', requireAuth, getAllTeams);
 router.get('/my-requests', requireAuth, getMyRequests);
 router.get('/my-teams', requireAuth, getMyTeams);
+router.get('/:id', requireAuth, getTeamById);
 router.put('/:id', requireAuth, updateTeam)
 
 router.post('/', requireAuth, createTeam);

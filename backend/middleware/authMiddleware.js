@@ -13,12 +13,12 @@ function requireAuth(req, res, next) {
     }
 
     req.user = {
-        id: req.session.userId,
+        _id: req.session.userId,
         role: req.session.userRole,
         name: req.session.userName,
         email: req.session.userEmail
     };
-
+    
     next();
 }
 
@@ -37,7 +37,7 @@ function requireOwner(req, res, next) {
     }
 
     req.user = {
-        id: req.session.userId,
+        _id: req.session.userId,
         role: req.session.userRole,
         name: req.session.userName,
         email: req.session.userEmail

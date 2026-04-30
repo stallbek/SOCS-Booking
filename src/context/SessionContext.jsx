@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
-const AUTH_API_BASE_URL = 'http://localhost:5001/api/auth'//'/api/auth';
+const AUTH_API_BASE_URL = 'http://localhost:5001/api/auth' //'/api/auth';
+
 
 //context used to share session data
 const SessionContext = createContext(null);
@@ -33,7 +34,7 @@ function SessionProvider({ children }) {
 
         //save logged in user
         setCurrentUser(data.user);
-        refreshNotifications();
+        
 
       } catch (error) {
 
@@ -47,10 +48,21 @@ function SessionProvider({ children }) {
       }
     };
 
+    
     //run once when component loads
     checkSession();
 
-  }, []);
+  }, 
+  
+  []);
+  useEffect(() => {
+  const interval = setInterval(() => {
+    refreshNotifications();
+  }, 5000); // every 5 seconds
+
+  return () => clearInterval(interval);
+}, []);
+
 
   const login = async ({ email, password }) => {
     try {
@@ -162,21 +174,32 @@ function SessionProvider({ children }) {
 });
 const refreshNotifications = async () => {
   try {
-    const res = await fetch('/api/notifications/count', {
-      credentials: 'include'
+    const res = await fetch('http://localhost:5001/api/meetings/notifications/count', {
+      credentials: 'include',
+      cache: 'no-store'
     });
 
-    if (!res.ok) return;
+    const contentType = res.headers.get('content-type');
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await res.text();
+      console.error('Non-JSON response:', text);
+      return;
+    }
 
     const data = await res.json();
 
     setNotifications({
-      owner: data.ownerNotifications,
-      user: data.userNotifications
+      owner: data.ownerNotifications ?? 0,
+      user: data.userNotifications ?? 0
     });
 
   } catch (err) {
-    console.error(err);
+    console.error('Notification error:', err);
   }
 };
 
