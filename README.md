@@ -1,4 +1,4 @@
-# SOCS Booking Application - Group 30
+# SOCS Booking Application
 
 ![SOCS Booking Application](./screenshot.png)
 

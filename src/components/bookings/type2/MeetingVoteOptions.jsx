@@ -13,7 +13,8 @@ function MeetingVoteOptions({
   onToggleOption,
   options,
   readOnly = false,
-  selectedOptionIds = []
+  selectedOptionIds = [],
+  showReadOnlyLabel = true
 }) {
   if (!options.length) {
     return (
@@ -54,9 +55,11 @@ function MeetingVoteOptions({
                   </div>
 
                   {readOnly ? (
-                    <span className="meeting-option-state">
-                      {isHighlighted ? 'Final time' : 'Read only'}
-                    </span>
+                    isHighlighted || showReadOnlyLabel ? (
+                      <span className="meeting-option-state">
+                        {isHighlighted ? 'Final time' : 'Read only'}
+                      </span>
+                    ) : null
                   ) : (
                     <label className="meeting-option-toggle">
                       <input
