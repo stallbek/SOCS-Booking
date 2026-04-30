@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:5001/api';//'/api';
+const API_BASE = '/api';
 
 export async function apiRequest(endpoint, method = 'GET', body = null) {
   const res = await fetch(`${API_BASE}${endpoint}`, {

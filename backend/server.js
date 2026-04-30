@@ -26,28 +26,6 @@ const app = express();
 //connects MongoDB
 connectDB();
 
-app.get('/api/debug-db', async (req, res) => {
-  try {
-    const dbName = mongoose.connection.name;
-    const ownersCount = await mongoose.connection.db.collection('users').countDocuments({ role: 'owner' });
-    const allCollections = await mongoose.connection.db.listCollections().toArray();
-    
-    res.json({
-      success: true,
-      dbUri: process.env.MONGODB_URI ? '***SET***' : 'NOT SET',
-      dbName: dbName,
-      ownersCount: ownersCount,
-      collections: allCollections.map(c => c.name),
-      sampleUsers: await mongoose.connection.db.collection('users').find({}).limit(3).toArray()
-    });
-    console.log('DB URI:', process.env.MONGODB_URI);
-console.log('Fetching owners from:', db.collection);
-
-  } catch (error) {
-    res.json({ error: error.message, dbUri: process.env.MONGODB_URI || 'NO URI' });
-  }
-});
-
 //adds middleware
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
