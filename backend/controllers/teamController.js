@@ -77,10 +77,21 @@ exports.createTeam = async (req, res) => {
       });
     }
     if (description.length > 200) {
-  return res.status(400).json({
-    error: 'Description must be under 200 characters.'
-  });
-}
+      return res.status(400).json({
+        error: 'Description must be under 200 characters.'
+      });
+    }
+    if (skills.length > 100) {
+      return res.status(400).json({
+        error: 'Skills must be under 100 characters.'
+      });
+    }
+    if (maxMembers < 1){
+      return res.status(400).json({error: 'There must be at least one member in a team'});
+    }
+    if (maxMembers > 10){
+      return res.status(400).json({error: 'A Team can have a maximum of 10 members'});
+    }
 
     const request = new TeamRequest({
       creator: req.session.userId,
@@ -129,7 +140,7 @@ exports.joinTeam = async (req, res) => {
     request.hasUpdates = true;
     request.lastActionBy = 'join';
     await request.save();
-    
+
 
     const creator = await User.findById(request.creator, 'email');
 
@@ -152,7 +163,7 @@ exports.leaveTeam = async (req, res) => {
 
     if (!request) return res.status(404).json({ error: 'Team not found.' });
 
-    
+
     const userId = req.session.userId;
 
     // Remove user from members
@@ -169,7 +180,7 @@ exports.leaveTeam = async (req, res) => {
       });
     }
     // if the creator of the team leaves, then transfer ownership of the team to someone else 
-   if (request.creator.toString() === userId.toString()) {
+    if (request.creator.toString() === userId.toString()) {
       request.creator = request.members[0]; // promote first member
     }
     // Open space in the team if someone leaves
@@ -179,7 +190,7 @@ exports.leaveTeam = async (req, res) => {
     request.hasUpdates = true;
     request.lastActionBy = 'leave';
     await request.save();
-    
+
     res.json({ message: 'Left team successfully', request });
   } catch {
     res.status(500).json({ error: 'Failed to leave team.' });
@@ -190,7 +201,7 @@ exports.leaveTeam = async (req, res) => {
 // REMOVE member (creator)
 // DELETE /api/teams/:id/remove/:userId
 exports.removeMember = async (req, res) => {
-  
+
   try {
     const request = await TeamRequest.findOne({
       _id: req.params.id,
@@ -234,8 +245,26 @@ exports.updateTeam = async (req, res) => {
       return res.status(403).json({ error: 'Not authorized.' });
     }
 
-    if (description && description.length > 300) {
-      return res.status(400).json({ error: 'Description too long.' });
+    if (!courseNumber || !teamName || !description) {
+      return res.status(400).json({
+        error: 'Course number, team name, and description are required.'
+      });
+    }
+    if (description.length > 200) {
+      return res.status(400).json({
+        error: 'Description must be under 200 characters.'
+      });
+    }
+    if (skills.length > 100) {
+      return res.status(400).json({
+        error: 'Skills must be under 100 characters.'
+      });
+    }
+    if (maxMembers < 1){
+      return res.status(400).json({error: 'There must be at least one member in a team'});
+    }
+    if (maxMembers > 10){
+      return res.status(400).json({error: 'A Team can have a maximum of 10 members'});
     }
 
     if (description) request.description = description.trim();

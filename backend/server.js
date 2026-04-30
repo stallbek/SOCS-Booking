@@ -34,21 +34,22 @@ app.use(cors({
 }));
 
 app.use(express.json());
-
+app.set('trust proxy', 1);
 app.use(session({
   secret: process.env.SESSION_SECRET || 'dev-secret-change-this',
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: false,
-    sameSite: 'lax'
+    secure: true,
+    sameSite: 'none'
   }
 }));
 app.use((req, res, next) => {
-  console.log("SESSION ID:", req.sessionID);
-  console.log("SESSION DATA:", req.session);
-  console.log("Before Routes", req.method, req.url);
+  console.log("GLOBAL HIT:", req.method, req.url);
+  // console.log("SESSION ID:", req.sessionID);
+  // console.log("SESSION DATA:", req.session);
+  // console.log("Before Routes", req.method, req.url);
   next();
 });
 

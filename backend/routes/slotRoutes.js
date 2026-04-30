@@ -1,4 +1,4 @@
-// Authors: Emerson Lin,
+// Authors: Emerson Lin, Ananya Krishnakumar 261024261
 
 const { requireAuth, requireOwner } = require('../middleware/authMiddleware');
 
@@ -30,7 +30,7 @@ router.get('/mine/details', requireOwner, getMySlotDetails);
 router.get('/:id', requireAuth, getSlotById);
 router.put('/:id/activate', requireOwner, activateSlot);
 router.delete('/:id', requireOwner, deleteSlot);
-router.post('/:id/invite-link', requireOwner, generateInviteLink);
+router.post('/book/:inviteCode', requireOwner, generateInviteLink);
 
 // Office Hours (Type 3)
 router.post('/office-hours/create', requireOwner, createOfficeHours);
@@ -42,7 +42,10 @@ router.delete('/:id/cancel-booking', requireAuth, cancelBooking);
 router.get('/bookings/mine', requireAuth, getMyBookings);
 
 // Public endpoints - list of owners and their public slots
-router.get('/public/owners', requireAuth, getPublicOwners);
+router.get('/public/owners',(req, res, next) => {
+  console.log("GET public owners hit");
+  next();
+},  getPublicOwners);
 router.get('/public/owner/:ownerId/slots', requireAuth, getOwnerPublicSlots);
 // Public endpoint - access slot by invite code (no auth required)
 router.get('/public/code/:inviteCode', getSlotByInviteCode);

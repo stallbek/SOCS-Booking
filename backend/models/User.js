@@ -1,7 +1,7 @@
 // Ananya Krishnakumar 261024261
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
-
+const { v4: uuidv4 } = require('uuid');
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -31,6 +31,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['owner', 'user'],
     required: true
+  },
+  bookingToken: {
+    type: String,
+    default: uuidv4
   }
 }, { timestamps: true });
 

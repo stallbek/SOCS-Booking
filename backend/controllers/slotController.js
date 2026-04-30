@@ -54,6 +54,18 @@ function getSlotBookingDetails(slot) {
     isBooked: Boolean(slot.bookedBy)
   };
 }
+//Validation Helpers
+const isValidTime = (t) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(t);
+
+const isPastDate = (date) => new Date(date) < new Date(new Date().toDateString());
+
+const isValidRange = (start, end) => start < end;
+const validateTitle = (desc) => {
+  if (desc && desc.length > 100) {
+    return 'Title must be under 100 characters.';
+  }
+  return null;
+};
 
 // OWNER: Slot Management
 // Create a single slot (private by default)
@@ -63,6 +75,25 @@ exports.createSlot = async (req, res) => {
 
     if (!title || !date || !startTime || !endTime) {
       return res.status(400).json({ error: 'Title, date, startTime, and endTime are required.' });
+    }
+    if (description.length > 200) {
+      return res.status(400).json({
+        error: 'Description must be under 200 characters.'
+      });
+    }
+    if (!isValidTime(startTime) || !isValidTime(endTime)) {
+      return res.status(400).json({ error: 'Invalid time format.' });
+    }
+    if (!validateMessage(title)) {
+      return res.status(400).json({ error: 'Message must be under 200 characters.' });
+    }
+
+    if (isPastDate(date)) {
+      return res.status(400).json({ error: 'Cannot book meetings in the past.' });
+    }
+
+    if (!isValidRange(startTime, endTime)) {
+      return res.status(400).json({ error: 'End time must be after start time.' });
     }
 
     const slot = new Slot({
@@ -196,6 +227,8 @@ exports.deleteSlot = async (req, res) => {
 // Generate an invitation URL/link for owner's activated slots
 exports.generateInviteLink = async (req, res) => {
   try {
+    const { userIds = [], emails = [] } = req.body;
+
     const slot = await Slot.findById(req.params.id);
 
     if (!slot) {
@@ -203,20 +236,28 @@ exports.generateInviteLink = async (req, res) => {
     }
 
     if (slot.owner.toString() !== req.session.userId.toString()) {
-      return res.status(403).json({ error: 'You can only generate links for your own slots.' });
+      return res.status(403).json({ error: 'You can only generate links to your own slots.' });
+    }
+
+    if (slot.status !== 'active') {
+      return res.status(400).json({ error: 'Slot must be active to invite users.' });
     }
 
     const inviteCode = uuidv4().slice(0, 8);
+
     slot.inviteCode = inviteCode;
+    slot.invitedUsers = userIds;
+    slot.invitedEmails = emails;
+
     await slot.save();
 
     res.json({
-      message: 'Invitation link generated.',
       inviteCode,
-      inviteLink: `/booking?code=${inviteCode}`
+      inviteLink: `/book/${inviteCode}`
     });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -230,6 +271,31 @@ exports.createOfficeHours = async (req, res) => {
 
     if (!title || !startDate || !endDate || !timeOptions || timeOptions.length === 0) {
       return res.status(400).json({ error: 'Title, date range, and time options are required.' });
+    }
+    if (new Date(startDate) > new Date(endDate)) {
+      return res.status(400).json({
+        error: 'Start date must be before end date.'
+      });
+    }
+
+    if (recurringWeeks && recurringWeeks > 12) {
+      return res.status(400).json({
+        error: 'Recurring weeks cannot exceed 12.'
+      });
+    }
+
+    for (const opt of timeOptions) {
+      if (!isValidTime(opt.startTime) || !isValidTime(opt.endTime)) {
+        return res.status(400).json({
+          error: 'Invalid time format in time options.'
+        });
+      }
+
+      if (!isValidRange(opt.startTime, opt.endTime)) {
+        return res.status(400).json({
+          error: 'End time must be after start time.'
+        });
+      }
     }
 
     const start = parseCalendarDate(startDate);
@@ -384,7 +450,7 @@ exports.getMyBookings = async (req, res) => {
 exports.getPublicOwners = async (req, res) => {
   try {
     const ownersWithSlots = await Slot.distinct('owner', { status: 'active' });
-   const owners = await User.find({ role: 'owner' }, 'name email');
+    const owners = await User.find({ role: 'owner' }, 'name email');
     // const owners = await User.find({ _id: { $in: ownersWithSlots }, role: 'owner' }, 'name email');
 
     res.json(owners);
@@ -424,6 +490,20 @@ exports.getOwnerPublicSlots = async (req, res) => {
 
 // Get a single slot by invite code (public access - no auth required)
 exports.getSlotByInviteCode = async (req, res) => {
+  const userId = req.session?.userId;
+  const userEmail = req.session?.userEmail;
+
+  const isInvited =
+    slot.invitedUsers.some(id => id.toString() === userId) ||
+    slot.invitedEmails.includes(userEmail);
+
+  if (slot.invitedUsers.length || slot.invitedEmails.length) {
+    if (!isInvited) {
+      return res.status(403).json({
+        error: 'You are not invited to this slot.'
+      });
+    }
+  }
   try {
     const { inviteCode } = req.params;
 

@@ -5,14 +5,24 @@ const User = require('../models/User');
 exports.registerUser = async (req, res) => {
   try {
     const { name, email, password, confirmPassword } = req.body;
+    const NAME_REGEX = /^[A-Za-zÀ-ÿ\s'-]+$/; // supports accented names
+
+    const validateName = (name) => {
+      if (!name) return 'Name is required.';
+      if (name.length > 50) return 'Name must be under 50 characters.';
+      if (!NAME_REGEX.test(name)) return 'Name can only contain letters and spaces.';
+      return null;
+    };
 
     if (!name || !email || !password || !confirmPassword) {
       return res.status(400).json({ error: 'All fields are required.' });
     }
-
+    const nameError = validateName(name);
+    if (nameError) return res.status(400).json({ error: nameError });
     if (!email.endsWith('@mcgill.ca') && !email.endsWith('@mail.mcgill.ca')) {
       return res.status(400).json({ error: 'Only McGill emails are allowed.' });
     }
+
     // Password Checks 
     if (password !== confirmPassword) {
       return res.status(400).json({ error: 'Passwords do not match.' });
@@ -120,4 +130,26 @@ exports.getCurrentUser = (req, res) => {
       role: req.session.userRole
     }
   });
+};
+
+//Search users in the database
+exports.searchUsers = async (req, res) => {
+  try {
+    const q = req.query.q;
+
+    if (!q) return res.json([]);
+
+    const users = await User.find({
+      $or: [
+        { name: { $regex: q, $options: 'i' } },
+        { email: { $regex: q, $options: 'i' } }
+      ]
+    })
+    .select('name email')
+    .limit(10);
+
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };

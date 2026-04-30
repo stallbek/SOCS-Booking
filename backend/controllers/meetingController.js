@@ -1,10 +1,22 @@
+//Ananya Krishnakumar 261024261
 const { v4: uuidv4 } = require('uuid');
 const MeetingRequest = require('../models/MeetingRequest');
 const GroupMeeting = require('../models/GroupMeeting');
 const Slot = require('../models/Slot');
 const User = require('../models/User');
 
+//Helpers
+const isValidTime = (t) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(t);
 
+const isPastDate = (date) => new Date(date) < new Date(new Date().toDateString());
+
+const isValidRange = (start, end) => start < end;
+ const validateMessage = (desc) => {
+      if (desc && desc.length > 200) {
+        return 'Message must be under 200 characters.';
+      }
+      return null;
+    };
 
 // TYPE 1 – REQUEST MEETINGS
 
@@ -29,6 +41,21 @@ exports.sendMeetingRequest = async (req, res) => {
     if (!owner) {
       return res.status(404).json({ error: 'Owner not found.' });
     }
+    if (!isValidTime(preferredStartTime) || !isValidTime(preferredEndTime)) {
+      return res.status(400).json({ error: 'Invalid time format.' });
+    }
+    if (!validateMessage(message)){
+      return res.status(400).json({error: 'Message must be under 200 characters.'});
+    }
+
+    if (isPastDate(preferredDate)) {
+      return res.status(400).json({ error: 'Cannot book meetings in the past.' });
+    }
+
+    if (!isValidRange(preferredStartTime, preferredEndTime)) {
+      return res.status(400).json({ error: 'End time must be after start time.' });
+    }
+
 
     const request = new MeetingRequest({
       fromUser: req.session.userId,
@@ -208,17 +235,41 @@ exports.getNotificationCounts = async (req, res) => {
     });
 
   } catch (err) {
-    res.status(500).json({  ownerNotifications: 0,
+    res.status(500).json({
+      ownerNotifications: 0,
       userNotifications: 0,
-      error: 'Failed to fetch notifications' });
+      error: 'Failed to fetch notifications'
+    });
   }
 };
 
 
 // TYPE 2 – GROUP MEETINGS
 
+//Helper functions
+const validateGroupMeeting = ({ startDate, endDate, timeOptions }) => {
+  if (new Date(endDate) < new Date(startDate)) {
+    return 'End date must be after start date.';
+  }
+
+  if (!timeOptions?.length) {
+    return 'At least one time option is required.';
+  }
+
+  for (const opt of timeOptions) {
+    if (!isValidTime(opt.startTime) || !isValidTime(opt.endTime)) {
+      return 'Invalid time format in options.';
+    }
+    if (!isValidRange(opt.startTime, opt.endTime)) {
+      return 'Invalid time range in options.';
+    }
+  }
+
+  return null;
+};
+
 // Create group meeting
-// 
+
 exports.createGroupMeeting = async (req, res) => {
   try {
     const {
@@ -318,6 +369,13 @@ exports.voteOnGroupMeeting = async (req, res) => {
 
 exports.getGroupMeetingByCode = async (req, res) => {
   try {
+    const isInvited =
+      group.invitedUsers.some(u => u.toString() === req.session.userId) ||
+      group.invitedEmails.includes(req.session.userEmail);
+
+    if (!isInvited && group.owner._id.toString() !== req.session.userId) {
+      return res.status(403).json({ error: 'Not invited' });
+    }
     const group = await GroupMeeting.findOne({
       inviteCode: req.params.code
     })
@@ -377,11 +435,11 @@ exports.finalizeGroupMeeting = async (req, res) => {
       )
     ];
 
-    if (!voterIds.length) {
-      return res.status(400).json({
-        error: 'At least one vote is required before finalizing.'
-      });
-    }
+    // if (!voterIds.length) {
+    //   return res.status(400).json({
+    //     error: 'At least one vote is required before finalizing.'
+    //   });
+    // }
 
     group.selectedOption = {
       date: selectedOption.date,

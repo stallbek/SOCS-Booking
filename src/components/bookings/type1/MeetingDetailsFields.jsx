@@ -28,6 +28,7 @@ function MeetingDetailsFields({
             placeholder={titlePlaceholder}
             type="text"
             value={form[titleName] || ''}
+            maxLength={20}
           />
         </label>
       ) : null}
@@ -40,6 +41,7 @@ function MeetingDetailsFields({
             onChange={handleChange}
             placeholder={descriptionPlaceholder}
             rows="3"
+            maxLength={200}
             value={form[descriptionName] || ''}
           ></textarea>
         </label>

@@ -17,6 +17,7 @@ function AccountPanel({ mode }) {
   });
 
   const redirectTo = location.state?.redirectTo || '/app/dashboard';
+  const NAME_REGEX = /^[A-Za-z\s'-]+$/;
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -57,6 +58,20 @@ function AccountPanel({ mode }) {
     if (isRegister && formValues.password !== formValues.confirmPassword) {
       setFeedback('Passwords do not match.');
       return;
+      if (isRegister) {
+        const name = formValues.name.trim();
+
+        if (name.length > 36) {
+          setFeedback('Name must be 35 characters or less.');
+          return;
+        }
+
+        if (!NAME_REGEX.test(name)) {
+          setFeedback('Name can only contain letters and spaces.');
+          return;
+        }
+      }
+
     }
 
     let result;
@@ -133,7 +148,7 @@ function AccountPanel({ mode }) {
               <div className="auth-form-row">
                 <label className="form-field">
                   <span>Name</span>
-                  <input name="name" onChange={handleChange} placeholder="Full name" type="text" value={formValues.name} />
+                  <input name="name" onChange={handleChange} placeholder="Full name" type="text" value={formValues.name} maxLength={35}/>
                 </label>
 
                 <label className="form-field">
