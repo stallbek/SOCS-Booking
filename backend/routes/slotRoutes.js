@@ -39,13 +39,12 @@ router.get('/:id', requireAuth, getSlotById);
 router.put('/:id/activate', requireOwner, activateSlot);
 router.delete('/:id', requireOwner, deleteSlot);
 router.post('/:id/:invite-link', requireOwner, generateInviteLink);
-<<<<<<< Updated upstream
-=======
+
 
 // Office Hours (Type 3)
 router.post('/office-hours/create', requireOwner, createOfficeHours);
 router.get('/office-hours/mine', requireOwner, getMyOfficeHours);
->>>>>>> Stashed changes
+
 
 // User booking management
 router.post('/:id/book', requireAuth, bookSlot);
