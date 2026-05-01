@@ -24,6 +24,7 @@ import OwnerGroupMeetingPanel from '../components/bookings/type2/OwnerGroupMeeti
 import BookingTypeSelector from '../components/bookings/shared/BookingTypeSelector';
 import MeetingRequestsPanel from '../components/bookings/type1/MeetingRequestsPanel';
 import OfficeHoursForm from '../components/bookings/type3/OfficeHoursForm';
+import OfficeHourTimeEditForm from '../components/bookings/type3/OfficeHourTimeEditForm';
 import {
   createInitialOfficeHoursForm,
   createTimeOption
@@ -33,8 +34,10 @@ import {
   countOfficeHourSlots,
   countSlotsBySeries,
   countValidTimeBlocks,
+  createOfficeHoursGroupId,
   filterOfficeHoursSlots,
   getCreateValidationMessage,
+  getOfficeHourTimeEditMessage,
   getPreviewSummary,
   getSelectedBookingType,
   getSeriesEndDate,
@@ -59,6 +62,10 @@ function OwnerAvailabilityPage() {
   const [loadingRequests, setLoadingRequests] = useState(isOwner);
   const [saving, setSaving] = useState(false);
   const [deletingKey, setDeletingKey] = useState('');
+  const [editingSlotId, setEditingSlotId] = useState('');
+  const [editTimeForm, setEditTimeForm] = useState({ startTime: '', endTime: '' });
+  const [editTimeFeedback, setEditTimeFeedback] = useState('');
+  const [savingEditId, setSavingEditId] = useState('');
   const [actingRequestId, setActingRequestId] = useState('');
   const [formFeedback, setFormFeedback] = useState('');
   const [showAllSchedule, setShowAllSchedule] = useState(false);
@@ -312,6 +319,63 @@ function OwnerAvailabilityPage() {
     setTimeOptions((currentOptions) => currentOptions.filter((option, optionIndex) => optionIndex !== index));
   };
 
+  const handleStartEditTime = (event) => {
+    const validationMessage = getOfficeHourTimeEditMessage(event, {
+      startTime: event.startTime || '',
+      endTime: event.endTime || ''
+    });
+
+    if (validationMessage) {
+      notify({ message: validationMessage, tone: 'error' });
+      return;
+    }
+
+    setEditingSlotId(event.id);
+    setEditTimeForm({
+      startTime: event.startTime || '',
+      endTime: event.endTime || ''
+    });
+    setEditTimeFeedback('');
+  };
+
+  const handleCancelEditTime = () => {
+    setEditingSlotId('');
+    setEditTimeForm({ startTime: '', endTime: '' });
+    setEditTimeFeedback('');
+  };
+
+  const handleEditTimeChange = (name, value) => {
+    setEditTimeForm((currentValues) => ({
+      ...currentValues,
+      [name]: value
+    }));
+    setEditTimeFeedback('');
+  };
+
+  const handleEditTimeSubmit = async (submitEvent, scheduleEvent) => {
+    submitEvent.preventDefault();
+
+    const validationMessage = getOfficeHourTimeEditMessage(scheduleEvent, editTimeForm);
+
+    if (validationMessage) {
+      setEditTimeFeedback(validationMessage);
+      return;
+    }
+
+    setSavingEditId(scheduleEvent.id);
+
+    try {
+      await apiRequest(`/slots/office-hours/${scheduleEvent.id}/time`, 'PATCH', editTimeForm);
+      await loadSlots();
+      notify({ message: 'OH slot time updated.', tone: 'success' });
+      handleCancelEditTime();
+    } catch (error) {
+      setEditTimeFeedback(error.message);
+    } finally {
+      setSavingEditId('');
+    }
+  };
+
   const handleCreateOfficeHours = async (event) => {
     event.preventDefault();
     setFormFeedback('');
@@ -335,9 +399,15 @@ function OwnerAvailabilityPage() {
       }
 
       let createdCount = 0;
+      const ownerId = currentUser?.id || currentUser?._id || 'owner';
+      const recurringGroupId = scheduleMode === 'recurring'
+        ? createOfficeHoursGroupId(ownerId)
+        : '';
 
       for (const payload of futureSlots.payloads) {
-        const data = await apiRequest('/slots/office-hours/create', 'POST', payload);
+        const data = await apiRequest('/slots/office-hours/create', 'POST', recurringGroupId
+          ? { ...payload, recurringGroupId }
+          : payload);
         createdCount += data.slotsCreated || 0;
       }
 
@@ -415,33 +485,20 @@ function OwnerAvailabilityPage() {
 
     setDeletingKey(`series:${recurringGroupId}`);
 
-    let deletedCount = 0;
-    const nextNoticeActions = [];
-
     try {
-      for (const slot of slotsInSeries) {
-        const data = await apiRequest(`/slots/${slot._id}`, 'DELETE');
-        const notifyAction = createMailtoAction(data.notifyEmail, `Email student ${nextNoticeActions.length + 1}`);
-
-        if (notifyAction) {
-          nextNoticeActions.push(notifyAction);
-        }
-
-        deletedCount += 1;
-      }
+      const data = await apiRequest(`/slots/office-hours/series/${encodeURIComponent(recurringGroupId)}`, 'DELETE');
+      const notifyAction = createMailtoAction(data.notifyEmail, 'Email students');
+      const deletedCount = data.deletedCount || slotsInSeries.length;
 
       await loadSlots();
       notify({
-        actions: nextNoticeActions,
+        actions: notifyAction ? [notifyAction] : [],
         message: `Deleted ${deletedCount} office-hour slots from this series.`,
         tone: 'success'
       });
     } catch (error) {
       notify({
-        actions: nextNoticeActions,
-        message: deletedCount
-          ? `Deleted ${deletedCount} slot${deletedCount === 1 ? '' : 's'} before the series delete stopped. ${error.message}`
-          : error.message,
+        message: error.message,
         tone: 'error'
       });
       await loadSlots();
@@ -609,6 +666,12 @@ function OwnerAvailabilityPage() {
               const hasSeries = Boolean(event.recurringGroupId && seriesCount > 1);
               const isDeletingSlot = deletingKey === `slot:${event.id}`;
               const isDeletingSeries = deletingKey === `series:${event.recurringGroupId}`;
+              const isEditingSlot = editingSlotId === event.id;
+              const isSavingEdit = savingEditId === event.id;
+
+              if (isEditingSlot) {
+                return null;
+              }
 
               return (
                 <>
@@ -619,18 +682,27 @@ function OwnerAvailabilityPage() {
                   ) : null}
 
                   <button
+                    className="text-link"
+                    disabled={isDeletingSlot || isDeletingSeries || isSavingEdit}
+                    onClick={() => handleStartEditTime(event)}
+                    type="button"
+                  >
+                    {isEditingSlot ? 'Editing' : 'Edit time'}
+                  </button>
+
+                  <button
                     className="text-link availability-delete"
-                    disabled={isDeletingSlot || isDeletingSeries}
+                    disabled={isDeletingSlot || isDeletingSeries || isSavingEdit}
                     onClick={() => handleDeleteSlot(event.id)}
                     type="button"
                   >
-                    {isDeletingSlot ? 'Deleting' : hasSeries ? 'Delete occurrence' : 'Delete'}
+                    {isDeletingSlot ? 'Deleting' : 'Delete this slot'}
                   </button>
 
                   {hasSeries ? (
                     <button
                       className="text-link availability-delete-series"
-                      disabled={isDeletingSeries || isDeletingSlot}
+                      disabled={isDeletingSeries || isDeletingSlot || isSavingEdit}
                       onClick={() => handleDeleteSeries(event.recurringGroupId)}
                       type="button"
                     >
@@ -654,20 +726,39 @@ function OwnerAvailabilityPage() {
                   <p>{event.note}</p>
                 </>
               ) : (
-                <>
+                (() => {
+                  const isEditingSlot = editingSlotId === event.id;
+
+                  return (
+                    <>
                   <div className="dashboard-event-head">
                     <h3>{event.title}</h3>
-                    <span className={`dashboard-badge${event.isPast ? ' dashboard-badge-muted' : ''}`}>
-                      {event.statusLabel}
-                    </span>
+                    {!isEditingSlot ? (
+                      <span className={`dashboard-badge${event.isPast ? ' dashboard-badge-muted' : ''}`}>
+                        {event.statusLabel}
+                      </span>
+                    ) : null}
                   </div>
 
-                  {event.description ? <p>{event.description}</p> : null}
-                  <p>{event.note}</p>
-                </>
+                  {!isEditingSlot && event.description ? <p>{event.description}</p> : null}
+                  {!isEditingSlot ? <p>{event.note}</p> : null}
+
+                  {isEditingSlot ? (
+                    <OfficeHourTimeEditForm
+                      feedback={editTimeFeedback}
+                      form={editTimeForm}
+                      onCancel={handleCancelEditTime}
+                      onChange={handleEditTimeChange}
+                      onSubmit={(submitEvent) => handleEditTimeSubmit(submitEvent, event)}
+                      saving={savingEditId === event.id}
+                    />
+                  ) : null}
+                    </>
+                  );
+                })()
               )
             )}
-            rowClassName={(event) => `availability-event-row${event.isPast ? ' dashboard-event-row-past' : ''}`}
+            rowClassName={(event) => `availability-event-row${event.isPast ? ' dashboard-event-row-past' : ''}${editingSlotId === event.id ? ' availability-event-row-editing' : ''}`}
             selectedDayKey={selectedDayKey}
             showOverflowToggle={hasOverflowingSchedule}
             showOverflowToggleLabel={showAllSchedule ? 'Show less' : 'Show more'}

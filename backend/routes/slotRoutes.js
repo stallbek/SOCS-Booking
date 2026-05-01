@@ -20,8 +20,16 @@ const {
   getOwnerPublicSlots,
   getSlotByInviteCode,
   createOfficeHours,
-  getMyOfficeHours
+  getMyOfficeHours,
+  updateOfficeHourTime,
+  deleteOfficeHourSeries
 } = require('../controllers/slotController');
+
+// Office Hours (Type 3)
+router.post('/office-hours/create', requireOwner, createOfficeHours);
+router.get('/office-hours/mine', requireOwner, getMyOfficeHours);
+router.patch('/office-hours/:id/time', requireOwner, updateOfficeHourTime);
+router.delete('/office-hours/series/:recurringGroupId', requireOwner, deleteOfficeHourSeries);
 
 // Owner slot management
 router.post('/', requireOwner, createSlot);
@@ -31,10 +39,6 @@ router.get('/:id', requireAuth, getSlotById);
 router.put('/:id/activate', requireOwner, activateSlot);
 router.delete('/:id', requireOwner, deleteSlot);
 router.post('/book/:inviteCode', requireOwner, generateInviteLink);
-
-// Office Hours (Type 3)
-router.post('/office-hours/create', requireOwner, createOfficeHours);
-router.get('/office-hours/mine', requireOwner, getMyOfficeHours);
 
 // User booking management
 router.post('/:id/book', requireAuth, bookSlot);

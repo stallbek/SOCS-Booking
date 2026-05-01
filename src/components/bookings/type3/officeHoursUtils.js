@@ -56,6 +56,10 @@ function hasValidTimeRange(option) {
   return option.startTime && option.endTime && option.startTime < option.endTime;
 }
 
+function isValidTimeValue(value) {
+  return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value || '');
+}
+
 function isDateBeforeToday(value) {
   return value && value < getDayKey(new Date());
 }
@@ -94,6 +98,10 @@ export function getSelectedBookingType(typeId) {
 
 export { filterOfficeHoursSlots };
 
+export function createOfficeHoursGroupId(ownerId = 'owner') {
+  return `office-hours-${ownerId}-${Date.now()}`;
+}
+
 export function mapSlotToEvent(slot) {
   const { startAt, endAt } = getSlotDateTimes(slot);
   const state = getOwnerSlotState(slot);
@@ -108,11 +116,41 @@ export function mapSlotToEvent(slot) {
     statusLabel: state.statusLabel,
     isBooked: state.isBooked,
     isPast: state.isPast,
+    startTime: slot.startTime,
+    endTime: slot.endTime,
     bookedName: state.bookedName,
     bookedEmail: state.bookedEmail,
     recurringGroupId: slot.recurringGroupId || '',
     note: state.note
   };
+}
+
+export function getOfficeHourTimeEditMessage(event, editForm, now = new Date()) {
+  if (!event) {
+    return 'Choose an office-hour slot.';
+  }
+
+  if (event.isPast) {
+    return 'Past OH slots cannot be edited.';
+  }
+
+  if (event.isBooked) {
+    return 'Booked OH slots cannot be edited.';
+  }
+
+  if (!isValidTimeValue(editForm.startTime) || !isValidTimeValue(editForm.endTime)) {
+    return 'Choose a valid start and end time.';
+  }
+
+  if (editForm.startTime >= editForm.endTime) {
+    return 'Choose an end time after the start time.';
+  }
+
+  if (!isFutureSlotStart(getDayKey(event.startAt), editForm.startTime, now)) {
+    return 'Choose a future start time.';
+  }
+
+  return '';
 }
 
 export function countSlotsBySeries(slots) {

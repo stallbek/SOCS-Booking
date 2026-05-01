@@ -147,7 +147,7 @@ export function getOwnerSlotState(slot, now = new Date()) {
   const attendeeEmails = attendees.map(getPersonEmail).filter(Boolean);
   const isMultiAttendeeSlot = slot?.slotType === 'group' || slot?.slotType === 'office-hours';
   const attendeeCount = Number(slot.attendeeCount) || attendees.length || (isMultiAttendeeSlot && slot.bookedBy ? 1 : 0);
-  const bookedName = isMultiAttendeeSlot
+  const bookedName = isMultiAttendeeSlot && attendeeCount
     ? String(attendeeCount)
     : slot.bookedByName || slot.bookedBy?.name || '';
   const bookedEmail = slot.bookedByEmail || slot.bookedBy?.email || attendeeEmails.join(',');

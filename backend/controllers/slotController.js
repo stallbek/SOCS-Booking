@@ -14,6 +14,16 @@ function addUtcDays(date, days) {
   return nextDate;
 }
 
+function getDateKey(value) {
+  return value instanceof Date
+    ? value.toISOString().split('T')[0]
+    : String(value).split('T')[0];
+}
+
+function getSlotStartDate(slot, startTime = slot.startTime) {
+  return new Date(`${getDateKey(slot.date)}T${startTime}:00`);
+}
+
 function getSlotAttendees(slot) {
   return Array.isArray(slot.attendees) ? slot.attendees : [];
 }
@@ -266,7 +276,7 @@ exports.generateInviteLink = async (req, res) => {
 // Create recurring office hours (available to all users)
 exports.createOfficeHours = async (req, res) => {
   try {
-    const { title, description, startDate, endDate, timeOptions, recurringWeeks } = req.body;
+    const { title, description, startDate, endDate, timeOptions, recurringWeeks, recurringGroupId } = req.body;
     // timeOptions: [{ dayOfWeek: 0-6 (Sunday-Saturday), startTime: "HH:MM", endTime: "HH:MM" }]
 
     if (!title || !startDate || !endDate || !timeOptions || timeOptions.length === 0) {
@@ -301,6 +311,7 @@ exports.createOfficeHours = async (req, res) => {
     const start = parseCalendarDate(startDate);
     const end = parseCalendarDate(endDate);
     const weeks = recurringWeeks || 1;
+    const nextRecurringGroupId = recurringGroupId || `office-hours-${req.session.userId}-${Date.now()}`;
 
     const slots = [];
 
@@ -325,7 +336,7 @@ exports.createOfficeHours = async (req, res) => {
             endTime: timeOption.endTime,
             status: 'active',
             slotType: 'office-hours',
-            recurringGroupId: `office-hours-${req.session.userId}-${Date.now()}`
+            recurringGroupId: nextRecurringGroupId
           });
           slots.push(slot);
         }
@@ -338,6 +349,100 @@ exports.createOfficeHours = async (req, res) => {
       message: `Office hours created with ${slots.length} recurring slots.`,
       slotsCreated: slots.length,
       slots: slots.slice(0, 5) // Return first 5 as preview
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.updateOfficeHourTime = async (req, res) => {
+  try {
+    const { startTime, endTime } = req.body;
+
+    if (!isValidTime(startTime) || !isValidTime(endTime)) {
+      return res.status(400).json({ error: 'Invalid time format.' });
+    }
+
+    if (!isValidRange(startTime, endTime)) {
+      return res.status(400).json({ error: 'End time must be after start time.' });
+    }
+
+    const slot = await Slot.findById(req.params.id);
+
+    if (!slot) {
+      return res.status(404).json({ error: 'Slot not found.' });
+    }
+
+    if (slot.owner.toString() !== req.session.userId.toString()) {
+      return res.status(403).json({ error: 'You can only edit your own office-hour slots.' });
+    }
+
+    if (slot.slotType !== 'office-hours') {
+      return res.status(400).json({ error: 'Only office-hour slots can be edited here.' });
+    }
+
+    if (slot.bookedBy || getSlotAttendees(slot).length) {
+      return res.status(400).json({ error: 'Booked office-hour slots cannot be edited.' });
+    }
+
+    if (getSlotStartDate(slot) <= new Date()) {
+      return res.status(400).json({ error: 'Past office-hour slots cannot be edited.' });
+    }
+
+    if (getSlotStartDate(slot, startTime) <= new Date()) {
+      return res.status(400).json({ error: 'Choose a future start time.' });
+    }
+
+    slot.startTime = startTime;
+    slot.endTime = endTime;
+    await slot.save();
+
+    const updatedSlot = await Slot.findById(slot._id)
+      .populate('bookedBy', 'name email')
+      .populate('attendees', 'name email');
+
+    res.json({
+      message: 'Office-hour time updated.',
+      slot: updatedSlot
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.deleteOfficeHourSeries = async (req, res) => {
+  try {
+    const { recurringGroupId } = req.params;
+
+    if (!recurringGroupId) {
+      return res.status(400).json({ error: 'Recurring group id is required.' });
+    }
+
+    const slots = await Slot.find({
+      owner: req.session.userId,
+      recurringGroupId,
+      slotType: 'office-hours'
+    })
+      .populate('bookedBy', 'email name')
+      .populate('attendees', 'email name');
+
+    if (!slots.length) {
+      return res.status(404).json({ error: 'Office-hour series not found.' });
+    }
+
+    const notifyEmails = Array.from(new Set(slots.flatMap((slot) => {
+      const attendeeEmails = getSlotAttendees(slot).map(getPersonEmail).filter(Boolean);
+      return slot.bookedBy ? [slot.bookedBy.email].filter(Boolean) : attendeeEmails;
+    })));
+
+    const deleteResult = await Slot.deleteMany({
+      _id: { $in: slots.map((slot) => slot._id) }
+    });
+
+    res.json({
+      message: 'Office-hour series deleted.',
+      deletedCount: deleteResult.deletedCount || 0,
+      notifyEmail: notifyEmails.length ? `mailto:${notifyEmails.join(',')}?subject=Your%20Booking%20Cancelled&body=Your%20booked%20office-hour%20slot%20has%20been%20cancelled.` : null
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
