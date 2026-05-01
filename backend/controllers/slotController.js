@@ -64,8 +64,7 @@ function getSlotBookingDetails(slot) {
     isBooked: Boolean(slot.bookedBy)
   };
 }
-<<<<<<< Updated upstream
-=======
+
 //Validation Helpers
 const isValidTime = (t) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(t);
 
@@ -85,7 +84,7 @@ const validateTitle = (desc) => {
   }
   return null;
 };
->>>>>>> Stashed changes
+
 
 // OWNER: Slot Management
 // Create a single slot (private by default)
