@@ -1,4 +1,7 @@
 // Ananya Krishnakumar 261024261
+//loads variables from .env into process.env
+require('dotenv').config();
+
 //import Express, CORS
 const express = require('express');
 const cors = require('cors');
@@ -38,8 +41,8 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    secure: true,
+    sameSite: 'none'
   }
 }));
 app.use((req, res, next) => {
