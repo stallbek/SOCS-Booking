@@ -64,6 +64,18 @@ function getSlotBookingDetails(slot) {
     isBooked: Boolean(slot.bookedBy)
   };
 }
+//Validation Helpers
+const isValidTime = (t) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(t);
+
+const isPastDate = (date) => new Date(date) < new Date(new Date().toDateString());
+
+const isValidRange = (start, end) => start < end;
+const validateTitle = (desc) => {
+  if (desc && desc.length > 100) {
+    return 'Title must be under 100 characters.';
+  }
+  return null;
+};
 
 // OWNER: Slot Management
 // Create a single slot (private by default)
@@ -73,6 +85,25 @@ exports.createSlot = async (req, res) => {
 
     if (!title || !date || !startTime || !endTime) {
       return res.status(400).json({ error: 'Title, date, startTime, and endTime are required.' });
+    }
+    if (description.length > 200) {
+      return res.status(400).json({
+        error: 'Description must be under 200 characters.'
+      });
+    }
+    if (!isValidTime(startTime) || !isValidTime(endTime)) {
+      return res.status(400).json({ error: 'Invalid time format.' });
+    }
+    if (!validateMessage(title)) {
+      return res.status(400).json({ error: 'Message must be under 200 characters.' });
+    }
+
+    if (isPastDate(date)) {
+      return res.status(400).json({ error: 'Cannot book meetings in the past.' });
+    }
+
+    if (!isValidRange(startTime, endTime)) {
+      return res.status(400).json({ error: 'End time must be after start time.' });
     }
 
     const slot = new Slot({
@@ -117,7 +148,9 @@ exports.getSlotById = async (req, res) => {
       .populate('owner', 'name email')
       .populate('bookedBy', 'name email')
       .populate('attendees', 'name email');
-
+    if (slot.owner.toString() !== req.session.userId.toString()) {
+      return res.status(403).json({ error: 'Unauthorized.' });
+    }
     if (!slot) {
       return res.status(404).json({ error: 'Slot not found.' });
     }
@@ -223,7 +256,7 @@ exports.generateInviteLink = async (req, res) => {
     res.json({
       message: 'Invitation link generated.',
       inviteCode,
-      inviteLink: `/booking?code=${inviteCode}`
+      inviteLink: `/book/${inviteCode}`
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

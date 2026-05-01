@@ -11,12 +11,9 @@ const isValidTime = (t) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(t);
 const isPastDate = (date) => new Date(date) < new Date(new Date().toDateString());
 
 const isValidRange = (start, end) => start < end;
- const validateMessage = (desc) => {
-      if (desc && desc.length > 200) {
-        return 'Message must be under 200 characters.';
-      }
-      return null;
-    };
+const isValidMessage = (desc) => {
+  return !desc || desc.length <= 200;
+};
 
 // TYPE 1 – REQUEST MEETINGS
 
@@ -33,7 +30,7 @@ exports.sendMeetingRequest = async (req, res) => {
       isReadBySender
     } = req.body;
 
-    if (!toOwnerId || !message || !preferredDate || !preferredStartTime || !preferredEndTime) {
+    if (!toOwnerId || !preferredDate || !preferredStartTime || !preferredEndTime) {
       return res.status(400).json({ error: 'All fields are required.' });
     }
 
@@ -44,7 +41,7 @@ exports.sendMeetingRequest = async (req, res) => {
     if (!isValidTime(preferredStartTime) || !isValidTime(preferredEndTime)) {
       return res.status(400).json({ error: 'Invalid time format.' });
     }
-    if (!validateMessage(message)){
+    if (!isValidMessage(message)){
       return res.status(400).json({error: 'Message must be under 200 characters.'});
     }
 

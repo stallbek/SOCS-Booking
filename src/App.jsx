@@ -8,7 +8,7 @@ import WelcomeRoute from './routes/WelcomeRoute';
 import TeamsPage from './pages/TeamsPage';
 import CreateTeamPage from './pages/CreateTeamsPage';
 import EditTeamPage from './pages/EditTeamsPage';
-
+import BookPage from './pages/BookPage';
 //Stalbek Ulanbek uulu 261102435
 
 function App() {
@@ -29,7 +29,7 @@ function App() {
           <Route element={<EditTeamPage />} path="teams/edit/:id" />
         </Route>
       </Route>
-
+      <Route element={<BookPage />} path="/booking/:inviteCode" />
       <Route element={<Navigate replace to="/" />} path="*" />
     </Routes>
   );

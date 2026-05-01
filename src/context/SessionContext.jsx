@@ -175,7 +175,7 @@ function SessionProvider({ children }) {
 });
 const refreshNotifications = async () => {
   try {
-    const res = await fetch(`${API_BASE}/meetings/notifications/count`, {
+    const res = await fetch('http://localhost:5001/api/meetings/notifications/count', {//'https://winter2026-comp307-group30.cs.mcgill.ca/api/meetings/notifications/count', {
       credentials: 'include',
       cache: 'no-store'
     });
@@ -188,7 +188,7 @@ const refreshNotifications = async () => {
 
     if (!contentType || !contentType.includes('application/json')) {
       const text = await res.text();
-      //console.error('Non-JSON response:', text);
+      console.error('Non-JSON response:', text);
       return;
     }
 

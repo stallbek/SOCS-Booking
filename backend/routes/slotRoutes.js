@@ -38,7 +38,7 @@ router.get('/mine/details', requireOwner, getMySlotDetails);
 router.get('/:id', requireAuth, getSlotById);
 router.put('/:id/activate', requireOwner, activateSlot);
 router.delete('/:id', requireOwner, deleteSlot);
-router.post('/book/:inviteCode', requireOwner, generateInviteLink);
+router.post('/:id/:invite-link', requireOwner, generateInviteLink);
 
 // User booking management
 router.post('/:id/book', requireAuth, bookSlot);
