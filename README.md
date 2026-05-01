@@ -34,3 +34,4 @@ MERN (MongoDB, Express.js, React, Node.js)
 4. **Utility helpers** (`src/utils/date.js`, `src/utils/bookings.js`) - Date formatting helpers and booking state logic were written with AI assistance.
 5. **Group meeting helpers** (`src/components/bookings/type2/groupMeetingUtils.js`) - The shared Type 2 grouped-date validation, payload-building, and slot-grouping logic was written with AI assistance.
 6. **Owner Type 2 panel** (`src/components/bookings/type2/OwnerGroupMeetingPanel.jsx`) - The owner-side Type 2 date-card composer and meeting management UI was written with AI assistance.
+7. **Owner Availability Page** (`src/pages/OwnerAvailabilityPage.jsx`) - The owner-side availability management page including office hours creation, meeting request handling, schedule calendar integration, and slot editing was written with AI assistance.
