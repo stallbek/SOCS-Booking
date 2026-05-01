@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { API_BASE } from '../api/api';
 
-
 const AUTH_API_BASE_URL = `${API_BASE}/auth`;
+
 
 //context used to share session data
 const SessionContext = createContext(null);
