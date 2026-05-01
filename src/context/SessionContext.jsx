@@ -1,7 +1,11 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { API_BASE } from '../api/api';
 
+<<<<<<< Updated upstream
 const AUTH_API_BASE_URL = `${API_BASE}/auth`;
+=======
+const AUTH_API_BASE_URL = '/api/auth';
+>>>>>>> Stashed changes
 
 
 //context used to share session data

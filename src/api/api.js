@@ -4,7 +4,7 @@ export async function apiRequest(endpoint, method = 'GET', body = null) {
   const cleanEndpoint = endpoint.startsWith('/')
     ? endpoint
     : `/${endpoint}`;
-    console.log("API CALL →", `${API_BASE}${cleanEndpoint}`);
+  console.log("API CALL →", `${API_BASE}${cleanEndpoint}`);
   const res = await fetch(`${API_BASE}${cleanEndpoint}`, {
     method,
     credentials: 'include',

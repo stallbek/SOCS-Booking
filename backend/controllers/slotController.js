@@ -64,6 +64,28 @@ function getSlotBookingDetails(slot) {
     isBooked: Boolean(slot.bookedBy)
   };
 }
+<<<<<<< Updated upstream
+=======
+//Validation Helpers
+const isValidTime = (t) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(t);
+
+const isPastDate = (date) => {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const input = new Date(date);
+  input.setHours(0,0,0,0);
+
+  return input < today;
+};
+const isValidRange = (start, end) => start < end;
+const validateTitle = (desc) => {
+  if (desc && desc.length > 100) {
+    return 'Title must be under 100 characters.';
+  }
+  return null;
+};
+>>>>>>> Stashed changes
 
 // OWNER: Slot Management
 // Create a single slot (private by default)
@@ -244,7 +266,7 @@ exports.generateInviteLink = async (req, res) => {
     res.json({
       message: 'Invitation link generated.',
       inviteCode,
-      inviteLink: `/book/${inviteCode}`
+      inviteLink: `/booking/${slot.inviteCode}`
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
