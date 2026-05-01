@@ -64,6 +64,7 @@ Code: Session-based authentication implementation, MongoDB connection and server
       configuration (db.js, server.js), auth middleware (authMiddleware.js),
       slot route protection, frontend auth routing, and connecting frontend
       session context to the real backend auth flow.
+      changed getPublicOwners() to fix the bug that only allowed users to see owners with active slots
 
 --------------------------------------------------------------------------------
 
