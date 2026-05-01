@@ -1,8 +1,5 @@
 SOCS Booking Application
-COMP 307 - End-of-Term Project
-McGill University
 
-================================================================================
 RUNNING WEBSITE URL
 ================================================================================
 
@@ -10,7 +7,7 @@ URL: https://winter2026-comp307-group30.cs.mcgill.ca/
 
 The application is hosted on the McGill MIMI server and requires McGill VPN to access.
 
-================================================================================
+
 TECH STACK
 ================================================================================
 
@@ -22,7 +19,7 @@ MERN (MongoDB, Express.js, React, Node.js)
   Deployment: Node.js on MIMI (port 3000), serves the built React frontend
               from the same process
 
-================================================================================
+
 TEAM MEMBERS AND CODE WORKED ON
 ================================================================================
 
@@ -73,7 +70,7 @@ Code: Owner slot management endpoints, office hour creation logic, user booking
       endpoints, and meeting route integration (slotController.js,
       slotRoutes.js, Slot.js).
 
-================================================================================
+
 30% NOT CODED BY THE TEAM (AI-GENERATED / EXTERNAL)
 ================================================================================
 
@@ -112,7 +109,7 @@ was written by hand by the team members listed above.
    derived event lists, and the inline renderActions/renderBody render props
    inside SchedulePanel.
 
-Total AI-assisted lines: ~2,328 out of 11,832 total (~19.7%) - within the 30%
+Total AI-assisted lines: 2,328 out of 11,832 total (~19.7%) - within the 30%
 limit.
 
-================================================================================
+
