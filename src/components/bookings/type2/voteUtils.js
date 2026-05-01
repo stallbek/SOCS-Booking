@@ -1,3 +1,4 @@
+//Stalbek Ulanbek uulu 261102435
 import { getDatePart } from '../../../utils/date';
 
 export function getTimeOptionId(option) {

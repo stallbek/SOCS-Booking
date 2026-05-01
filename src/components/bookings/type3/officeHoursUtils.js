@@ -1,3 +1,4 @@
+//Stalbek Ulanbek uulu 261102435
 import { ownerBookingTypes } from '../shared/bookingTypeOptions';
 import { weekdayOptions } from './officeHoursConfig';
 import {

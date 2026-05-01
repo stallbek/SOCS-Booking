@@ -100,7 +100,12 @@ function AccountPanel({ mode }) {
     }
 
     //if successful go to redirect page
-    navigate(redirectTo, { replace: true });
+    if (result.success) {
+      const params = new URLSearchParams(location.search);
+      const redirect = params.get('redirect');
+
+      navigate(redirect || '/app');
+    }
   };
 
 
@@ -148,7 +153,7 @@ function AccountPanel({ mode }) {
               <div className="auth-form-row">
                 <label className="form-field">
                   <span>Name</span>
-                  <input name="name" onChange={handleChange} placeholder="Full name" type="text" value={formValues.name} maxLength={35}/>
+                  <input name="name" onChange={handleChange} placeholder="Full name" type="text" value={formValues.name} maxLength={35} />
                 </label>
 
                 <label className="form-field">

@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { API_BASE } from '../api/api';
 
-const AUTH_API_BASE_URL = `${API_BASE}/auth`;
 
+const AUTH_API_BASE_URL = `${API_BASE}/auth`;
 
 //context used to share session data
 const SessionContext = createContext(null);
@@ -175,7 +175,7 @@ function SessionProvider({ children }) {
 });
 const refreshNotifications = async () => {
   try {
-    const res = await fetch(`${API_BASE}/meetings/notifications/count`, {
+    const res = await fetch('https://winter2026-comp307-group30.cs.mcgill.ca/api/meetings/notifications/count', {
       credentials: 'include',
       cache: 'no-store'
     });
@@ -188,7 +188,7 @@ const refreshNotifications = async () => {
 
     if (!contentType || !contentType.includes('application/json')) {
       const text = await res.text();
-      //console.error('Non-JSON response:', text);
+      console.error('Non-JSON response:', text);
       return;
     }
 

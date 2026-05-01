@@ -1,3 +1,4 @@
+//Stalbek Ulanbek uulu 261102435
 export const ownerBookingTypes = [
   {
     id: 'type-1',

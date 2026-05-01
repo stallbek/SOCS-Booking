@@ -1,12 +1,10 @@
-export const API_BASE = '/api';
+const API_BASE = '/api';
 
 export async function apiRequest(endpoint, method = 'GET', body = null) {
   const cleanEndpoint = endpoint.startsWith('/')
     ? endpoint
     : `/${endpoint}`;
-
-  console.log('API CALL', `${API_BASE}${cleanEndpoint}`);
-
+  console.log("API CALL →", `${API_BASE}${cleanEndpoint}`);
   const res = await fetch(`${API_BASE}${cleanEndpoint}`, {
     method,
     credentials: 'include',
@@ -19,6 +17,11 @@ export async function apiRequest(endpoint, method = 'GET', body = null) {
   const data = await res.json();
 
   if (!res.ok) {
+    if (res.status === 401 || res.status === 403) {
+      window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+      return;
+    }
+
     throw new Error(data.error || 'Something went wrong');
   }
 

@@ -1,3 +1,4 @@
+//Stalbek Ulanbek uulu 261102435
 import { getDayKey } from '../../../utils/date';
 
 export const weekdayOptions = [

@@ -507,6 +507,17 @@ function OwnerAvailabilityPage() {
     }
   };
 
+  const handleGenerateInvite = async (slotId) => {
+    try {
+      const data = await apiRequest(`/slots/${slotId}/invite-link`, 'POST');
+
+      notify({ message: 'Invite link generated', tone: 'success' });
+
+      await loadSlots();
+    } catch (err) {
+      notify({ message: err.message, tone: 'error' });
+    }
+  };
   const handleRequestAction = async (requestId, action) => {
     if (action === 'decline') {
       const shouldDecline = await confirm({
@@ -675,6 +686,34 @@ function OwnerAvailabilityPage() {
 
               return (
                 <>
+                  <button
+                    className="text-link"
+                    onClick={async () => {
+                      try {
+                        const data = await apiRequest(
+                          `/slots/${event.id}/invite-link`,
+                          'POST'
+                        );
+
+                        const fullLink = `${window.location.origin}${data.inviteLink}`;
+
+                        await navigator.clipboard.writeText(fullLink);
+
+                        notify({
+                          message: 'Invite link copied',
+                          tone: 'success'
+                        });
+                      } catch (err) {
+                        notify({
+                          message: err.message,
+                          tone: 'error'
+                        });
+                      }
+                    }}
+                  >
+                    Generate invite link
+                  </button>
+
                   {event.bookedEmail ? (
                     <a className="text-link" href={`mailto:${event.bookedEmail}`}>
                       Email student

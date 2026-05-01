@@ -28,7 +28,7 @@ function MeetingDetailsFields({
             placeholder={titlePlaceholder}
             type="text"
             value={form[titleName] || ''}
-            maxLength={20}
+            maxLength={100}
           />
         </label>
       ) : null}
