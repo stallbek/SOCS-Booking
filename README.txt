@@ -44,11 +44,16 @@ Code: All frontend pages, components, layouts, routing, and styling.
 Name: Ananya Krishnakumar
 ID:   261024261
 Role: Backend
-Code: Backend skeleton setup, Express/Node server initialization, backend
-      dependencies, data models (User.js, Slot.js, MeetingRequest.js,
-      GroupMeeting.js, TeamRequest.js), route definitions (authRoutes.js,
-      meetingRoutes.js, teamRoutes.js), auth and meeting controllers, and
-      frontend pages for the Team Finder feature.
+Code: Backend setup, Express/Node server initialization,
+      Database connection setup (`config/db.js`) backend dependencies, 
+      data models (`User.js`, `Slot.js`, `MeetingRequest.js`, `GroupMeeting.js`, 
+      `TeamRequest.js`), route definitions (`authRoutes.js`, `meetingRoutes.js`, 
+      `teamRoutes.js`, `slotRoutes.js`), controllers (`authController.js`, 
+      `meetingController.js`(meeting requests, voting, notifications), 
+      `slotController.js`(slot creation, booking, invite links, public access), 
+      `teamController.js`), and frontend pages for the Team Finder feature 
+      (`TeamPage.js`, `CreateTeamsPage.js`, `EditTeamsPage.js`) Student Booking
+      flow-invite link handing, slot loading, booking logic (`BookPage.js`).
 
 --------------------------------------------------------------------------------
 
