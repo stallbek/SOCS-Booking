@@ -65,10 +65,10 @@ Code: Session-based authentication implementation, MongoDB connection and server
 Name: Emerson Lin
 ID:   261096196
 Role: Backend / Slots
-Code: Owner slot management endpoints, office hour creation logic, user booking
+Code: Owner slot management endpoints, office hour creation logic, group meeting flow, user booking
       flow, public slot browsing, invite code and ID-based slot retrieval
       endpoints, and meeting route integration (slotController.js,
-      slotRoutes.js, Slot.js).
+      slotRoutes.js, Slot.js, meetingController.js, OwnerGroupMeetingPanel.jsx).
 
 
 30% NOT CODED BY THE TEAM (AI-GENERATED / EXTERNAL)
