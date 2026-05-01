@@ -1,4 +1,4 @@
-const API_BASE = '/api';
+export const API_BASE = '/api';
 
 export async function apiRequest(endpoint, method = 'GET', body = null) {
   const cleanEndpoint = endpoint.startsWith('/')
