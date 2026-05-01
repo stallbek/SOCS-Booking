@@ -175,7 +175,7 @@ function SessionProvider({ children }) {
 });
 const refreshNotifications = async () => {
   try {
-    const res = await fetch('http://localhost:5001/api/meetings/notifications/count', {//'https://winter2026-comp307-group30.cs.mcgill.ca/api/meetings/notifications/count', {
+    const res = await fetch('https://winter2026-comp307-group30.cs.mcgill.ca/api/meetings/notifications/count', {
       credentials: 'include',
       cache: 'no-store'
     });

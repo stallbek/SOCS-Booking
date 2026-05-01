@@ -64,18 +64,6 @@ function getSlotBookingDetails(slot) {
     isBooked: Boolean(slot.bookedBy)
   };
 }
-//Validation Helpers
-const isValidTime = (t) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(t);
-
-const isPastDate = (date) => new Date(date) < new Date(new Date().toDateString());
-
-const isValidRange = (start, end) => start < end;
-const validateTitle = (desc) => {
-  if (desc && desc.length > 100) {
-    return 'Title must be under 100 characters.';
-  }
-  return null;
-};
 
 // OWNER: Slot Management
 // Create a single slot (private by default)
@@ -86,7 +74,7 @@ exports.createSlot = async (req, res) => {
     if (!title || !date || !startTime || !endTime) {
       return res.status(400).json({ error: 'Title, date, startTime, and endTime are required.' });
     }
-    if (description.length > 200) {
+    if (description && description.length > 200) {
       return res.status(400).json({
         error: 'Description must be under 200 characters.'
       });
@@ -95,7 +83,7 @@ exports.createSlot = async (req, res) => {
       return res.status(400).json({ error: 'Invalid time format.' });
     }
     if (!validateMessage(title)) {
-      return res.status(400).json({ error: 'Message must be under 200 characters.' });
+      return res.status(400).json({ error: 'Title must be under 100 characters.' });
     }
 
     if (isPastDate(date)) {
