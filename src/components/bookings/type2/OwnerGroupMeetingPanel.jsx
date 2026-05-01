@@ -1,3 +1,5 @@
+// Emerson Lin 261096196,
+
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiRequest } from '../../../api/api';
 import { useFeedback } from '../../../context/FeedbackContext';
@@ -59,6 +61,7 @@ function OwnerGroupMeetingPanel() {
   const [feedback, setFeedback] = useState('');
   const [finalizingInviteCode, setFinalizingInviteCode] = useState('');
   const [latestShare, setLatestShare] = useState(null);
+  const [selectedFinalizeOptions, setSelectedFinalizeOptions] = useState({});
 
   const loadGroups = useCallback(async () => {
     setLoadingGroups(true);
@@ -205,12 +208,20 @@ function OwnerGroupMeetingPanel() {
       })
     }
   };
+
+  const handleSelectFinalizeOption = (groupInviteCode, optionId) => {
+    setSelectedFinalizeOptions((current) => ({
+      ...current,
+      [groupInviteCode]: optionId
+    }));
+  };
       
   const handleFinalizeGroup = async (group) => {
-    const winningOption = getTopVotedGroupOption(group.timeOptions || []);
-    const selectedOptionId = getGroupMeetingOptionId(winningOption);
+    // Use selected option or fall back to top voted
+    const selectedOptionId = selectedFinalizeOptions[group.inviteCode];
+    const finalOptionId = selectedOptionId || getGroupMeetingOptionId(getTopVotedGroupOption(group.timeOptions || []));
 
-    if (!selectedOptionId) {
+    if (!finalOptionId) {
       notify({
         message: 'At least one vote is required before finalizing.',
         tone: 'error'
@@ -222,9 +233,14 @@ function OwnerGroupMeetingPanel() {
 
     try {
       await apiRequest(`/meetings/group/${group.inviteCode}/finalize`, 'PATCH', {
-        selectedOptionId
+        selectedOptionId: finalOptionId
       });
       await loadGroups();
+      setSelectedFinalizeOptions((current) => {
+        const updated = { ...current };
+        delete updated[group.inviteCode];
+        return updated;
+      });
       notify({
         message: 'Group meeting finalized.',
         tone: 'success'
@@ -424,6 +440,17 @@ function OwnerGroupMeetingPanel() {
               const winningDateLabel = winningOption ? formatLongDate(parseDayKey(getDatePart(winningOption.date))) : '';
               const winningStartAt = winningOption ? buildDateTime(winningOption.date, winningOption.startTime) : '';
               const winningEndAt = winningOption ? buildDateTime(winningOption.date, winningOption.endTime) : '';
+              
+              // Get selected finalization option or fall back to winning option
+              const selectedForFinalize = selectedFinalizeOptions[group.inviteCode];
+              const selectedFinalOption = selectedForFinalize 
+                ? group.timeOptions.find(opt => getGroupMeetingOptionId(opt) === selectedForFinalize)
+                : winningOption;
+              const selectedFinalVoteCount = getGroupOptionVoteCount(selectedFinalOption);
+              const selectedFinalDateLabel = selectedFinalOption ? formatLongDate(parseDayKey(getDatePart(selectedFinalOption.date))) : '';
+              const selectedFinalStartAt = selectedFinalOption ? buildDateTime(selectedFinalOption.date, selectedFinalOption.startTime) : '';
+              const selectedFinalEndAt = selectedFinalOption ? buildDateTime(selectedFinalOption.date, selectedFinalOption.endTime) : '';
+              
               const selectedOptionId = getSelectedGroupOptionId(group);
               const selectedOption = group.selectedOption;
               const selectedDateLabel = selectedOption?.date ? formatLongDate(parseDayKey(getDatePart(selectedOption.date))) : '';
@@ -449,11 +476,11 @@ function OwnerGroupMeetingPanel() {
                     {!isFinalized ? (
                       <button
                         className="text-link"
-                        disabled={!winningOption || isFinalizing}
+                        disabled={isFinalizing}
                         onClick={() => handleFinalizeGroup(group)}
                         type="button"
                       >
-                        {isFinalizing ? 'Finalizing' : winningOption ? 'Finalize top time' : 'No votes yet'}
+                        {isFinalizing ? 'Finalizing' : 'Finalize meeting'}
                       </button>
                     ) : null}
 
@@ -472,12 +499,12 @@ function OwnerGroupMeetingPanel() {
                     </button>
                   </div>
 
-                  {!isFinalized && winningOption ? (
+                  {!isFinalized && selectedFinalOption ? (
                     <div className="dashboard-empty-state group-meeting-final-summary">
-                      <h3>Top time</h3>
+                      <h3>{selectedForFinalize ? 'Selected time' : 'Top time'}</h3>
                       <p>
-                        {winningDateLabel}, {formatTimeRange(winningStartAt, winningEndAt)}
-                        {' '}({winningVoteCount} vote{winningVoteCount === 1 ? '' : 's'})
+                        {selectedFinalDateLabel}, {formatTimeRange(selectedFinalStartAt, selectedFinalEndAt)}
+                        {' '}({selectedFinalVoteCount} vote{selectedFinalVoteCount === 1 ? '' : 's'})
                       </p>
                     </div>
                   ) : null}
@@ -502,12 +529,17 @@ function OwnerGroupMeetingPanel() {
                       />
                     </details>
                   ) : (
-                    <MeetingVoteOptions
-                      highlightedOptionId={selectedOptionId}
-                      options={group.timeOptions || []}
-                      readOnly
-                      showReadOnlyLabel={false}
-                    />
+                    <>
+                      <div className="group-meeting-vote-options-section">
+                        <h4>Select a time to finalize:</h4>
+                        <MeetingVoteOptions
+                          highlightedOptionId={selectedFinalizeOptions[group.inviteCode] || ''}
+                          onToggleOption={(optionId) => handleSelectFinalizeOption(group.inviteCode, optionId)}
+                          options={group.timeOptions || []}
+                          selectedOptionIds={selectedFinalizeOptions[group.inviteCode] ? [selectedFinalizeOptions[group.inviteCode]] : []}
+                        />
+                      </div>
+                    </>
                   )}
                 </article>
               );
@@ -516,7 +548,7 @@ function OwnerGroupMeetingPanel() {
         ) : (
           <div className="dashboard-empty-state">
             <h3>No meetings yet</h3>
-            <p>Create the first Type 2 meeting above.</p>
+            <p>Create your group meeting above.</p>
           </div>
         )}
       </section>

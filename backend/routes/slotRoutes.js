@@ -1,4 +1,4 @@
-// Authors: Emerson Lin, Ananya Krishnakumar 261024261
+// Authors: Emerson Lin 261096196, Ananya Krishnakumar 261024261
 
 const { requireAuth, requireOwner } = require('../middleware/authMiddleware');
 

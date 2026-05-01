@@ -1,4 +1,4 @@
-//Ananya Krishnakumar 261024261
+//Ananya Krishnakumar 261024261, Emerson Lin 261096196
 const { v4: uuidv4 } = require('uuid');
 const MeetingRequest = require('../models/MeetingRequest');
 const GroupMeeting = require('../models/GroupMeeting');
@@ -44,8 +44,9 @@ exports.sendMeetingRequest = async (req, res) => {
     if (!isValidTime(preferredStartTime) || !isValidTime(preferredEndTime)) {
       return res.status(400).json({ error: 'Invalid time format.' });
     }
-    if (!validateMessage(message)){
-      return res.status(400).json({error: 'Message must be under 200 characters.'});
+    const messageError = validateMessage(message);
+    if (messageError) {
+      return res.status(400).json({ error: messageError });
     }
 
     if (isPastDate(preferredDate)) {
@@ -369,13 +370,6 @@ exports.voteOnGroupMeeting = async (req, res) => {
 
 exports.getGroupMeetingByCode = async (req, res) => {
   try {
-    const isInvited =
-      group.invitedUsers.some(u => u.toString() === req.session.userId) ||
-      group.invitedEmails.includes(req.session.userEmail);
-
-    if (!isInvited && group.owner._id.toString() !== req.session.userId) {
-      return res.status(403).json({ error: 'Not invited' });
-    }
     const group = await GroupMeeting.findOne({
       inviteCode: req.params.code
     })
@@ -386,6 +380,19 @@ exports.getGroupMeetingByCode = async (req, res) => {
       return res.status(404).json({
         error: 'Group meeting not found.'
       });
+    }
+
+    // Check if user is invited or is the owner
+    // invite code serves as the invitation mechanism
+    const isOwner = group.owner._id.toString() === req.session.userId;
+    const hasInviteCode = true; // User has the code since they reached this endpoint
+    const isEmailInvited = Array.isArray(group.invitedEmails) && group.invitedEmails.includes(req.session.userEmail);
+
+    // Allow access if: owner, has invite code, or specifically email-invited
+    const isInvited = isOwner || hasInviteCode || isEmailInvited;
+
+    if (!isInvited) {
+      return res.status(403).json({ error: 'Not invited' });
     }
 
     res.json(group);
